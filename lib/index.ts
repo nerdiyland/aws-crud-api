@@ -57,8 +57,11 @@ export class BaseCrudApi extends cdk.Construct {
           'dynamodb:UpdateItem',
           'dynamodb:DeleteIte',
           'dynamodb:PutItem'
+        ],
+        resources: [
+          this.table.tableArn
         ]
-      }))
+      }));
     }
 
     // API resources
