@@ -1,12 +1,13 @@
-import { AuthorizationType, JsonSchema, LambdaIntegration, Method, Model, PassthroughBehavior, RequestValidator, Resource, ResourceProps } from "@aws-cdk/aws-apigateway";
-import { Function, Runtime, AssetCode } from '@aws-cdk/aws-lambda';
+import { AuthorizationType, LambdaIntegration, Method, Model, PassthroughBehavior, RequestValidator, Resource, ResourceProps } from "@aws-cdk/aws-apigateway";
 import { Construct } from "@aws-cdk/core";
-import { Table } from '@aws-cdk/aws-dynamodb';
+import { ITable } from '@aws-cdk/aws-dynamodb';
 import { PolicyStatement } from '@aws-cdk/aws-iam';
 import { BaseCrudApiProps } from "../models";
+import { IFunction } from "@aws-cdk/aws-lambda";
 
 export interface ExtendedConfiguration extends BaseCrudApiProps {
-  TableConfiguration: Table;
+  BackendFunction: IFunction;
+  Table: ITable;
 }
 
 export interface ResourceConfiguration extends ResourceProps {
@@ -40,7 +41,7 @@ export class GlobalCRUDResource extends Resource {
         'dynamodb:Scan'
       ],
       resources: [
-        props.Configuration.TableConfiguration.tableArn
+        props.Configuration.Table.tableArn
       ]
     }));
 

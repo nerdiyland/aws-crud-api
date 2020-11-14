@@ -1,6 +1,6 @@
-import { JsonSchema } from "@aws-cdk/aws-apigateway";
-import { AttributeType, Table } from "@aws-cdk/aws-dynamodb";
-import { Function } from "@aws-cdk/aws-lambda";
+import { IResource, IRestApi, JsonSchema, RestApi } from "@aws-cdk/aws-apigateway";
+import { AttributeType, ITable, Table } from "@aws-cdk/aws-dynamodb";
+import { Function, IFunction } from "@aws-cdk/aws-lambda";
 
 export interface BaseCrudApiProps {
 
@@ -10,25 +10,37 @@ export interface BaseCrudApiProps {
     ComponentName: string;
     
     /**
-     * Defines the path for this API resource's global operations - i.e. Create, List
+     * Defines the path for this API resource
      */
-    GlobalPathPart: string;
+    ResourcePath: string;
+
+    /**
+     * Defines an existing API to create the resource into. If none is defined, an API will be created
+     */
+    Api?: RestApi;
+
+    /**
+     * Optionally, the parent resource for the global operations.
+     * If none is set, the APIs root resource will be used.
+     */
+    GlobalParent?: IResource;
+
+    /**
+     * Optional parent resource for the individual operations.
+     * If none is set, the global resource will be used.
+     */
+    IndividualParent?: IResource;
   
     /**
-     * Defines the path for this API resource's individual operations - i.e. Get, Update, Delete
+     * Table to use for CRUD operations. If none is given, a table will be created.
+     * Tables must have only HashKey set to `Id` (string).
      */
-    UniquePathPart: string;
-  
-    /**
-     * Configures how the table that this API is backed by will be structured and created.
-     * Optionally, it can receive an instantiated DynamoDB table that will be used instead.
-     */
-    TableConfiguration?: Table | BaseCrudApiTableConfigurationProps;
+    Table?: ITable;
   
     /**
      * Function that will take care of the backend operations for this resource
      */
-    BackendFunction: Function;
+    BackendFunction?: IFunction;
   
   
   }

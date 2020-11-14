@@ -1,5 +1,6 @@
-import { RestApi } from '@aws-cdk/aws-apigateway';
-import { AttributeType, Table } from '@aws-cdk/aws-dynamodb';
+import { IRestApi, RestApi } from '@aws-cdk/aws-apigateway';
+import { AttributeType, ITable, Table } from '@aws-cdk/aws-dynamodb';
+import { IFunction } from '@aws-cdk/aws-lambda';
 import * as cdk from '@aws-cdk/core';
 import { CfnOutput, RemovalPolicy } from '@aws-cdk/core';
 import { BaseCrudApiProps } from './models';
@@ -9,13 +10,15 @@ import { IndividualCRUDResource } from './resources/individual-resource';
 export class BaseCrudApi extends cdk.Construct {
 
   public readonly api: RestApi;
-  public readonly table: Table;
+  public readonly table: ITable;
+  public readonly backendFunction: IFunction;
 
   constructor(scope: cdk.Construct, id: string, props: BaseCrudApiProps) {
     super(scope, id);
 
     // Initialise the API
-    this.api = new RestApi(this, 'RestApi', {
+    this.api = props.Api || new RestApi(this, 'RestApi', {
+      restApiName: props.ComponentName,
       defaultCorsPreflightOptions: {
         allowOrigins: ['*'],
         allowCredentials: true,
@@ -24,7 +27,7 @@ export class BaseCrudApi extends cdk.Construct {
       }
     });
 
-    this.table = new Table(this, 'EngagementsTable', {
+    this.table = props.Table || new Table(this, 'EngagementsTable', {
       removalPolicy: RemovalPolicy.DESTROY,
       partitionKey: {
         name: 'Id',
@@ -35,21 +38,23 @@ export class BaseCrudApi extends cdk.Construct {
     // API resources
     
     const globalCrudResource = new GlobalCRUDResource(this, 'GlobalCRUDResource', {
-      parent: this.api.root,
-      pathPart: props.GlobalPathPart,
+      parent: props.GlobalParent || this.api.root,
+      pathPart: props.ResourcePath,
       Configuration: {
         ...props,
-        TableConfiguration: this.table
+        BackendFunction: this.backendFunction,
+        Table: this.table
       }
       
     });
 
     const individualCrudResource = new IndividualCRUDResource(this, 'IndividualCRUDResource', {
-      parent: globalCrudResource,
-      pathPart: props.UniquePathPart,
+      parent: props.IndividualParent || globalCrudResource,
+      pathPart: `{id}`,
       Configuration: {
         ...props,
-        TableConfiguration: this.table
+        BackendFunction: this.backendFunction,
+        Table: this.table
       }
     });
 
