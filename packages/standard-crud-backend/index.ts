@@ -23,7 +23,7 @@ export const handler = async (event: any /* TODO */) => {
   Log.info('Starting items CRUD request', { UserId, Data, OperationName });
   const itemsCrud = new ItemsCrud({
     UserId,
-    ItemsTableName: process.env.itemS_TABLE_NAME!,
+    ItemsTableName: process.env.ITEMS_TABLE_NAME!,
   });
 
   let itemId: string | null = null;

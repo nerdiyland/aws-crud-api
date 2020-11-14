@@ -1,5 +1,5 @@
 import { IRestApi, RestApi } from '@aws-cdk/aws-apigateway';
-import { AttributeType, ITable, Table } from '@aws-cdk/aws-dynamodb';
+import { AttributeType, BillingMode, ITable, Table } from '@aws-cdk/aws-dynamodb';
 import { PolicyStatement } from '@aws-cdk/aws-iam';
 import { AssetCode, Function, IFunction, Runtime } from '@aws-cdk/aws-lambda';
 import * as cdk from '@aws-cdk/core';
@@ -33,6 +33,7 @@ export class BaseCrudApi extends cdk.Construct {
 
     this.table = props.Table || new Table(this, 'Table', {
       removalPolicy: RemovalPolicy.DESTROY,
+      billingMode: BillingMode.PAY_PER_REQUEST,
       partitionKey: {
         name: 'Id',
         type: AttributeType.STRING
@@ -45,7 +46,7 @@ export class BaseCrudApi extends cdk.Construct {
       runtime: Runtime.NODEJS_12_X,
       description: `${props.ComponentName}/${props.ResourcePath} - Standard backend for CRUD apis`,
       environment: {
-        TABLE_NAME: this.table.tableName
+        ITEMS_TABLE_NAME: this.table.tableName
       }
     });
 
