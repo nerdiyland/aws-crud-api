@@ -25,6 +25,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
       - run: npm rebuild && npm run prepare --if-present
       - run: npm run build
+      - run: ./node_modules/.bin/lerna run build
       - run: git config --global user.email autobot@aftersignals.com
       - run: git config --global user.name "AfterSignals Automation"
       - run: npm version patch -m "[skip ci] publish new version"
