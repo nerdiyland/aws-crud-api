@@ -17,8 +17,10 @@ jobs:
         with:
           node-version: 12
           registry-url: http://registry.npmjs.org/
-      - run: npm ci
+      - run: npm ci --ignore-scripts
         env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
+      - run: ./node_modules/.bin/lerna bootstrap
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
       - run: npm run build
       - run: git config --global user.email autobot@aftersignals.com
