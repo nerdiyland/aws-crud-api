@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "@dazn/lambda-powertools-logger": "^1.24.1",
-    "@devax/models": "0.0.7",
     "moment": "^2.29.1",
     "uuid": "^8.3.1"
   },
