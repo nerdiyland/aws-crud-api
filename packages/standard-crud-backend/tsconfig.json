@@ -19,7 +19,7 @@
     "strictPropertyInitialization": false,
     "esModuleInterop": true,
     "typeRoots": ["./node_modules/@types"],
-    "outDir": "dist",
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+  },
+  "exclude": ["*.spec.ts"]
 }

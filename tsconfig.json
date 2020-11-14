@@ -19,7 +19,6 @@
     "strictPropertyInitialization":false,
     "typeRoots": ["./node_modules/@types"],
     "skipLibCheck": true,
-    "outDir": "dist"
   },
   "exclude": ["cdk.out", "packages"]
 }
