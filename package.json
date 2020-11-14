@@ -6,13 +6,15 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "lerna bootstrap && lerna run build"
   },
   "devDependencies": {
     "@aws-cdk/assert": "1.73.0",
     "@types/jest": "^26.0.10",
     "@types/node": "10.17.27",
     "jest": "^26.4.2",
+    "lerna": "^3.22.1",
     "ts-jest": "^26.2.0",
     "typescript": "~3.9.7"
   },
