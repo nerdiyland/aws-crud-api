@@ -7,7 +7,7 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "postinstall": "lerna bootstrap && lerna run build"
+    "postinstall": "NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN lerna bootstrap && lerna run build"
   },
   "devDependencies": {
     "@aws-cdk/assert": "1.73.0",
