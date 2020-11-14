@@ -1,67 +1,62 @@
 import { } from 'aws-sdk'
 import Log from '@dazn/lambda-powertools-logger';
-import { FunctionEvent } from '@devax/models/dist/base/FunctionEvent';
-import { CreateEngagementRequest } from '@devax/models/dist/engagements/io/CreateEngagementRequest';
-import { EngagementByIdRequest } from '@devax/models/dist/engagements/io/EngagementByIdRequest';
-import { EngagementsCrud } from './engagements-crud';
-import { UpdateEngagementRequest } from '@devax/models/dist/engagements/io/UpdateEngagementRequest';
+import { ItemsCrud } from './items-crud';
 
 export enum OperationType {
-  CREATE_ENGAGEMENT = 'createEngagement',
-  LIST_ENGAGEMENTS = 'listEngagements',
-  GET_ENGAGEMENT = 'getEngagementById',
-  UPDATE_ENGAGEMENT = 'updateEngagement',
-  DELETE_ENGAGEMENT = 'deleteEngagement'
+  CREATE_item = 'createItem',
+  LIST_itemS = 'listItems',
+  GET_item = 'getItemById',
+  UPDATE_item = 'updateItem',
+  DELETE_item = 'deleteItem'
 }
 
 const INVALID_OPERATION_EXCEPTION = new Error('Invalid operation requested');
 
 /* TODO */
-export const handler = async (event: FunctionEvent<any>) => {
+export const handler = async (event: any /* TODO */) => {
   const { UserId, TeamId, Data, OperationName } = event;
 
   // Assign default team
   let finalTeamId = TeamId;
   if (!TeamId) finalTeamId = 'UNKNOWN';
 
-  Log.info('Starting Engagements CRUD request', { UserId, TeamId: finalTeamId, Data, OperationName });
-  const engagementsCrud = new EngagementsCrud({
+  Log.info('Starting items CRUD request', { UserId, Data, OperationName });
+  const itemsCrud = new ItemsCrud({
     UserId,
-    TeamId: finalTeamId,
-    EngagementsTableName: process.env.ENGAGEMENTS_TABLE_NAME!,
+    ItemsTableName: process.env.itemS_TABLE_NAME!,
   });
 
-  let engagementId: string | null = null;
+  let itemId: string | null = null;
   switch (OperationName) {
-    case OperationType.CREATE_ENGAGEMENT:
-      Log.info('Processing engagement creation');
-      const createResult = await engagementsCrud.createEngagement(Data as CreateEngagementRequest);
+    case OperationType.CREATE_item:
+      Log.info('Processing item creation');
+      const createResult = await itemsCrud.createItem(Data);
       return createResult;
-    case OperationType.LIST_ENGAGEMENTS:
-      Log.info('Processing engagement list request');
-      const listResult = await engagementsCrud.listEngagements();
+    case OperationType.LIST_itemS:
+      Log.info('Processing item list request');
+      const listResult = await itemsCrud.listItems();
       return listResult;
-    case OperationType.GET_ENGAGEMENT:
-      engagementId = (Data as EngagementByIdRequest).EngagementId;
-      Log.info('Reading engagement by id', { engagementId });
+    case OperationType.GET_item:
+      itemId = (Data).itemId; // TODO Change to params
+      Log.info('Reading item by id', { itemId });
       try {
-        const getResult = await engagementsCrud.getEngagementById(engagementId);
+        const getResult = await itemsCrud.getItemById(itemId!);
         return getResult;
       } catch (e) {
-        if (e === EngagementsCrud.ENGAGEMENT_NOT_FOUND_EXCEPTION) {
-          Log.error('The requested engagement was not found', { engagementId });
-          throw 'ENGAGEMENT_NOT_FOUND';
+        if (e === ItemsCrud.ITEM_NOT_FOUND_EXCEPTION) {
+          Log.error('The requested item was not found', { itemId });
+          throw 'ITEM_NOT_FOUND';
         }
       }
-    case OperationType.UPDATE_ENGAGEMENT:
-      engagementId = (Data as EngagementByIdRequest).EngagementId;
-      Log.info('Updating engagement by id', { engagementId });
-      const updateResult = await engagementsCrud.updateEngagement(engagementId, Data.Changes as UpdateEngagementRequest);
+    case OperationType.UPDATE_item:
+      itemId = (Data).itemId;
+      Log.info('Updating item by id', { itemId });
+      const updateResult = await itemsCrud.updateItem(itemId!, Data);
       return updateResult;
-    case OperationType.DELETE_ENGAGEMENT:
-      engagementId = (Data as EngagementByIdRequest).EngagementId;
-      Log.info('Deleting engagement by id', { engagementId });
-      await engagementsCrud.deleteEngagement(engagementId);
+    case OperationType.DELETE_item:
+      itemId = (Data).itemId;
+      Log.info('Deleting item by id', { itemId });
+      await itemsCrud.deleteItem(itemId!);
       return;
     default:
       Log.error('Unknown operation requested', { OperationName });

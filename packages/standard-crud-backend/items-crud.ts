@@ -1,0 +1,224 @@
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { v4 as uuid } from 'uuid';
+import moment from 'moment';
+import { StandaloneObject } from '@aftersignals/models/base/StandaloneObject';
+
+/**
+ * Configures the Items CRUD service
+ */
+export interface ItemsCrudProps {
+
+  /**
+   * Identity ID of the user that is requesting this service instance
+   */
+  UserId: string;
+
+  /**
+   * Name of the DynamoDB table where the items are stored.
+   */
+  ItemsTableName: string;
+
+  /**
+   * Optionally, provide the documentClient instance to use
+   */
+  DocumentClient?: DocumentClient;
+
+  /**
+   * Region where this service is deployed
+   */
+  AwsRegion?: string;
+}
+
+/**
+ * This service handles the CRUD operations for Items.
+ * Generic items:
+ * * C: Creation request object
+ * * R: Item
+ * * U: Update request object: Update request object
+ * * D: Delete request objects - also used for get requests and update requests.
+ */
+export class ItemsCrud<C extends StandaloneObject, R extends C, U, D> {
+
+  /**
+   * Thrown when a requested item is not found
+   */
+  static ITEM_NOT_FOUND_EXCEPTION = new Error('The requested item was not found');
+
+  /**
+   * Thrown when no configuration is given to this service
+   */
+  static INVALID_CONFIGURATION_EXCEPTION = new Error('Invalid configuration provided');
+
+  /**
+   * Thrown when the input configuration does not include a value for `ItemsTableName`
+   */
+  static NO_ITEMS_TABLE_EXCEPTION = new Error('No value has been given for the `ItemsTableName` property');
+
+  /**
+   * Thrown when invalid or no UserId is provided
+   */
+  static INVALID_USER_ID_EXCEPTION = new Error('Invalid value provided for `UserId`');
+
+  /**
+   * Thrown when an `ItemId` is not provided
+   */
+  static INVALID_ITEM_ID_EXCEPTION = new Error('Invalid `ItemId` provided');
+
+  /**
+   * Thrown when a method receives an invalid request
+   */
+  static INVALID_REQUEST_OBJECT = new Error('Invalid request object provided');
+
+  /**
+   * Thrown when an update is requested with no changes
+   */
+  static NO_CHANGES_EXCEPTION = new Error('No changes were provided to the update request');
+
+  /**
+   * Service properties
+   */
+  private readonly props: ItemsCrudProps;
+
+  /**
+   * Accessor for DynamoDB
+   */
+  private readonly ddb: DocumentClient;
+  
+  constructor(props: ItemsCrudProps) {
+    if (!props) {
+      throw ItemsCrud.INVALID_CONFIGURATION_EXCEPTION;
+    }
+
+    if (!props.UserId) {
+      throw ItemsCrud.INVALID_USER_ID_EXCEPTION;
+    }
+
+    if (!props.ItemsTableName) {
+      throw ItemsCrud.NO_ITEMS_TABLE_EXCEPTION;
+    }
+
+    this.props = props;
+    this.ddb = props.DocumentClient || new DocumentClient({
+      region: props.AwsRegion || process.env.AWS_REGION
+    });
+  }
+  
+  /**
+   * Creates an item in the system, and fills the required information
+   * @param request Input object to configure the item
+   */
+  async createItem(request: C): Promise<C> {
+    if (!request) {
+      throw ItemsCrud.INVALID_REQUEST_OBJECT;
+    }
+
+    // TODO Validate model
+
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    const id = uuid();
+    const Item: C = {
+      ...request,
+      UserId: this.props.UserId,
+      Id: id,
+      CreatedAt: now,
+      UpdatedAt: now,
+    }
+
+    await this.ddb.put({
+      TableName: this.props.ItemsTableName,
+      Item
+    }).promise();
+
+    return Item;
+  }
+
+  /**
+   * Deletes an item from the database
+   * @param itemId The identifier of the item to delete
+   */
+  async deleteItem(itemId: string): Promise<void> {
+    if (!itemId) {
+      throw ItemsCrud.INVALID_ITEM_ID_EXCEPTION;
+    }
+
+    await this.ddb.delete({
+      TableName: this.props.ItemsTableName,
+      Key: {
+        Id: itemId
+      }
+    }).promise();
+  }
+
+  /**
+   * Retrieves the item identified by the provided ID.
+   * @param itemId Id of the item
+   */
+  async getItemById (itemId: string): Promise<R> {
+    if (!itemId) {
+      throw ItemsCrud.INVALID_ITEM_ID_EXCEPTION;
+    }
+
+    const response = await this.ddb.get({
+      TableName: this.props.ItemsTableName,
+      Key: {
+        Id: itemId
+      }
+    }).promise();
+
+    if (!response.Item) {
+      throw ItemsCrud.ITEM_NOT_FOUND_EXCEPTION;
+    }
+
+    return response.Item! as R;
+  }
+
+  /**
+   * Lists the existing items in the database
+   */
+  async listItems (): Promise<R[]> {
+    const items = await this.ddb.scan({
+      TableName: this.props.ItemsTableName
+    }).promise();
+
+    return items.Items! as R[];
+  }
+
+  /**
+   * Updates an item in the database with the provided changes
+   * @param itemId Identifier of the item to update
+   * @param request Request object with the items to update
+   */
+  async updateItem(itemId: string, request: U): Promise<R> {
+    if (!itemId) {
+      throw ItemsCrud.INVALID_ITEM_ID_EXCEPTION;
+    }
+
+    if (!request) {
+      throw ItemsCrud.INVALID_REQUEST_OBJECT;
+    }
+
+    const changedKeys = Object.keys(request);
+    if (!changedKeys.length) {
+      throw ItemsCrud.NO_CHANGES_EXCEPTION;
+    }
+
+    const validProperties: string[] = [] // TODO
+    if (changedKeys.filter(k => validProperties.indexOf(k) === -1).length) {
+      throw ItemsCrud.INVALID_REQUEST_OBJECT;
+    }
+
+    const requestObject: DocumentClient.UpdateItemInput = {
+      TableName: this.props.ItemsTableName,
+      Key: {
+        Id: itemId
+      },
+      UpdateExpression: `set ${changedKeys.map(k => `#${k} = :${k}`).join(', ')}`.trim(),
+      ExpressionAttributeNames: changedKeys.map(k => ({ [`#${k}`]: k })).reduce((t: any, i: any) => ({ ...t, ...i }), {}),
+      ExpressionAttributeValues: changedKeys.map(k => ({ [`:${k}`]: (request as any)[k] })).reduce((t: any, i: any) => ({ ...t, ...i }), {})
+    }
+
+    await this.ddb.update(requestObject).promise();
+
+    return await this.getItemById(itemId);
+  }
+}

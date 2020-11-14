@@ -1,13 +1,12 @@
-import { EngagementsCrud } from './engagements-crud';
+import { ItemsCrud } from './items-crud';
 import { expect } from 'chai';
 
-describe('The `listEngagements` method of the Engagements CRUD service', () => {
+describe('The `listItems` method of the items CRUD service', () => {
   
   it('must attempt to connect to Dynamo for scanning items', done => {
-    const service = new EngagementsCrud({
+    const service = new ItemsCrud({
       UserId: '123',
-      TeamId: '123',
-      EngagementsTableName: 'dummy',
+      ItemsTableName: 'dummy',
       AwsRegion: 'dummy',
       DocumentClient: {
         // @ts-ignore
@@ -24,6 +23,6 @@ describe('The `listEngagements` method of the Engagements CRUD service', () => {
       }
     });
     
-    service!.listEngagements();
+    service!.listItems();
   });
 });
