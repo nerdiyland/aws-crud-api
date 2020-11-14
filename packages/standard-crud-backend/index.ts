@@ -3,11 +3,11 @@ import Log from '@dazn/lambda-powertools-logger';
 import { ItemsCrud } from './items-crud';
 
 export enum OperationType {
-  CREATE_item = 'createItem',
-  LIST_itemS = 'listItems',
-  GET_item = 'getItemById',
-  UPDATE_item = 'updateItem',
-  DELETE_item = 'deleteItem'
+  CREATE_ITEM = 'createItem',
+  LIST_ITEMS = 'listItems',
+  GET_ITEM = 'getItemById',
+  UPDATE_ITEM = 'updateItem',
+  DELETE_ITEM = 'deleteItem'
 }
 
 const INVALID_OPERATION_EXCEPTION = new Error('Invalid operation requested');
@@ -28,15 +28,15 @@ export const handler = async (event: any /* TODO */) => {
 
   let itemId: string | null = null;
   switch (OperationName) {
-    case OperationType.CREATE_item:
+    case OperationType.CREATE_ITEM:
       Log.info('Processing item creation');
       const createResult = await itemsCrud.createItem(Data);
       return createResult;
-    case OperationType.LIST_itemS:
+    case OperationType.LIST_ITEMS:
       Log.info('Processing item list request');
       const listResult = await itemsCrud.listItems();
       return listResult;
-    case OperationType.GET_item:
+    case OperationType.GET_ITEM:
       itemId = (Data).itemId; // TODO Change to params
       Log.info('Reading item by id', { itemId });
       try {
@@ -48,12 +48,12 @@ export const handler = async (event: any /* TODO */) => {
           throw 'ITEM_NOT_FOUND';
         }
       }
-    case OperationType.UPDATE_item:
+    case OperationType.UPDATE_ITEM:
       itemId = (Data).itemId;
       Log.info('Updating item by id', { itemId });
       const updateResult = await itemsCrud.updateItem(itemId!, Data);
       return updateResult;
-    case OperationType.DELETE_item:
+    case OperationType.DELETE_ITEM:
       itemId = (Data).itemId;
       Log.info('Deleting item by id', { itemId });
       await itemsCrud.deleteItem(itemId!);

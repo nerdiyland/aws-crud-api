@@ -21,6 +21,6 @@
     "skipLibCheck": true,
     "outDir": "dist"
   },
-  "exclude": ["cdk.out"]
+  "exclude": ["cdk.out", "packages"]
 }
 
