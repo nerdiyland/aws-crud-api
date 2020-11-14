@@ -171,7 +171,7 @@ export class IndividualCRUDResource extends Resource {
         'dynamodb:DeleteItem'
       ],
       resources: [
-        props.Configuration.TableConfiguration.tableArn
+        props.Configuration.Table.tableArn
       ]
     }));
   }
