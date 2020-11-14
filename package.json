@@ -8,7 +8,8 @@
     "watch": "tsc -w",
     "test": "jest",
     "prepublish": "lerna clean --yes",
-    "postinstall": "lerna bootstrap && lerna run build"
+    "postinstall": "npm run bootstrap && lerna run build",
+    "bootstrap": "lerna bootstrap -- --production --no-optional"
   },
   "devDependencies": {
     "@aws-cdk/assert": "1.73.0",

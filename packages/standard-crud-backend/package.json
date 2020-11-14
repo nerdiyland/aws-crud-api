@@ -2,7 +2,8 @@
   "name": "@aftersignals/base-crud-api-standard-crud-backend",
   "version": "0.0.0",
   "description": "Provides CRUD management functionality",
-  "main": "dist/index.js",
+  "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register '**/*.spec.ts'",
