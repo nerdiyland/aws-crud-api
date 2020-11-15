@@ -2,6 +2,9 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { v4 as uuid } from 'uuid';
 import moment from 'moment';
 import { StandaloneObject } from '@aftersignals/models/base/StandaloneObject';
+import { CreateItemRequest } from '@aftersignals/models/apis/base/contracts/CreateItemRequest'
+import { ListItemsRequest } from '@aftersignals/models/apis/base/contracts/ListItemsRequest'
+import { ListItemsResponse } from '@aftersignals/models/apis/base/contracts/ListItemsResponse'
 
 /**
  * Configures the Items CRUD service
@@ -36,8 +39,9 @@ export interface ItemsCrudProps {
  * * R: Item
  * * U: Update request object: Update request object
  * * D: Delete request objects - also used for get requests and update requests.
+ * * L: List filtering request
  */
-export class ItemsCrud<C extends StandaloneObject, R extends C, U, D> {
+export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, U, D, L> {
 
   /**
    * Thrown when a requested item is not found
@@ -175,12 +179,17 @@ export class ItemsCrud<C extends StandaloneObject, R extends C, U, D> {
   /**
    * Lists the existing items in the database
    */
-  async listItems (): Promise<R[]> {
+  async listItems (request: ListItemsRequest<L>): Promise<ListItemsResponse<R>> {
+    
+    // TODO Paging in
+    
     const items = await this.ddb.scan({
       TableName: this.props.ItemsTableName
     }).promise();
 
-    return items.Items! as R[];
+    // TODO Paging out
+
+    return items.Items! as ListItemsResponse<R>;
   }
 
   /**
