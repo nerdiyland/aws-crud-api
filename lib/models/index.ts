@@ -1,6 +1,6 @@
-import { IResource, IRestApi, JsonSchema, RestApi } from "@aws-cdk/aws-apigateway";
-import { AttributeType, ITable, Table } from "@aws-cdk/aws-dynamodb";
-import { Function, IFunction } from "@aws-cdk/aws-lambda";
+import { IResource, JsonSchema, RestApi } from "@aws-cdk/aws-apigateway";
+import { AttributeType, ITable } from "@aws-cdk/aws-dynamodb";
+import { IFunction } from "@aws-cdk/aws-lambda";
 
 export interface BaseCrudApiProps {
 

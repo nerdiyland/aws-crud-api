@@ -45,12 +45,11 @@ export class IndividualCRUDResource extends Resource {
           credentialsPassthrough: true,
           requestTemplates: {
             'application/json': JSON.stringify({
-              UserId: '$context.identity.caller',
-              TeamId: '$context.identity.cognitoIdentityPoolId',
-              OperationName: 'getItemById',
-              Data: {
-                Id: "$input.params('entityId')"
-              }
+              Params: {
+                Id: "$input.params('entityId')",
+                UserId: '$context.identity.caller',
+                OperationName: 'getItemById',
+              },
             }).split('"\'').join('').split('\'"').join('')
           },
           integrationResponses: [
@@ -90,13 +89,12 @@ export class IndividualCRUDResource extends Resource {
           credentialsPassthrough: true,
           requestTemplates: {
             'application/json': JSON.stringify({
-              UserId: '$context.identity.caller',
-              TeamId: '$context.identity.cognitoIdentityPoolId',
-              OperationName: 'updateItem',
-              Data: {
+              Params: {
                 Id: "$input.params('entityId')",
-                Changes: "'$input.json('$')'"
-              }
+                UserId: '$context.identity.caller',
+                OperationName: 'updateItem',
+              },
+              Data: "'$input.json('$')'"
             }).split('"\'').join('').split('\'"').join('')
           },
           integrationResponses: [
@@ -134,11 +132,10 @@ export class IndividualCRUDResource extends Resource {
           credentialsPassthrough: true,
           requestTemplates: {
             'application/json': JSON.stringify({
-              UserId: '$context.identity.caller',
-              TeamId: '$context.identity.cognitoIdentityPoolId',
-              OperationName: 'deleteItem',
-              Data: {
-                Id: "$input.params('entityId')"
+              Params: {
+                Id: "$input.params('entityId')",
+                UserId: '$context.identity.caller',
+                OperationName: 'deleteItem',
               }
             }).split('"\'').join('').split('\'"').join('')
           },

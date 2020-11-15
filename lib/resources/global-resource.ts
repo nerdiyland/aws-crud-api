@@ -67,9 +67,10 @@ export class GlobalCRUDResource extends Resource {
           credentialsPassthrough: true,
           requestTemplates: {
             'application/json': JSON.stringify({
-              UserId: '$context.identity.caller',
-              TeamId: '$context.identity.cognitoIdentityPoolId',
-              OperationName: 'createItem',
+              Params: {
+                UserId: '$context.identity.caller',
+                OperationName: 'createItem',
+              },
               Data: "'$input.json('$')'"
             }).split('"\'').join('').split('\'"').join('')
           },
@@ -110,9 +111,10 @@ export class GlobalCRUDResource extends Resource {
           credentialsPassthrough: true,
           requestTemplates: {
             'application/json': JSON.stringify({
-              UserId: '$context.identity.caller',
-              TeamId: '$context.identity.cognitoIdentityPoolId',
-              OperationName: 'listItems',
+              Params: {
+                UserId: '$context.identity.caller',
+                OperationName: 'listItems',
+              },
               Data: "'$input.json('$')'" // TODO
             }).split('"\'').join('').split('\'"').join('')
           },
