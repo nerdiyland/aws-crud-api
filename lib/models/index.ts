@@ -42,7 +42,10 @@ export interface BaseCrudApiProps {
      */
     BackendFunction?: IFunction;
   
-  
+    /**
+     * Defines the operations that this API should enable consumers to use
+     */
+    Operations: BaseCrudApiOperations;
   }
   
   export interface BaseCrudApiTableConfigurationProps {
