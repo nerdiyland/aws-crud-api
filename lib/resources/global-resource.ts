@@ -22,12 +22,12 @@ export class GlobalCRUDResource extends Resource {
   /**
    * Method for creating entities
    */
-  public readonly createMethod: Method;
+  public readonly createItemMethod: Method;
 
   /**
    * Method for listing entities
    */
-  public readonly listsMethod: Method;
+  public readonly listItemsMethod: Method;
 
   constructor (scope: Construct, id: string, props: ResourceConfiguration) {
     super(scope, id, props);
@@ -57,86 +57,90 @@ export class GlobalCRUDResource extends Resource {
 
     // TODO Define models
     
-    // Create entity
-    this.createMethod = new Method(this, 'CreateMethod', {
-      httpMethod: 'POST',
-      resource: this,
-      integration: new LambdaIntegration(props.Configuration.BackendFunction, {
-        proxy: false,
-        credentialsPassthrough: true,
-        requestTemplates: {
-          'application/json': JSON.stringify({
-            UserId: '$context.identity.caller',
-            TeamId: '$context.identity.cognitoIdentityPoolId',
-            OperationName: 'create',
-            Data: "'$input.json('$')'"
-          }).split('"\'').join('').split('\'"').join('')
-        },
-        integrationResponses: [
-          {
-            statusCode: '200'
-          }
-        ],
-        passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
-      }),
-      options: {
-        authorizationType: AuthorizationType.IAM,
-        operationName: 'create',
-        // requestModels: {
-        //   'application/json': createRequestModel
-        // },
-        // TODO Response models
-        requestValidator: requestValidator,
-        methodResponses: [
-          {
-            statusCode: '200',
-            // responseModels: {
-            //   'application/json': entityPropsModel
-            // },
-          }
-        ]
-      }
-    });
+    // Create item
+    if(props.Configuration.Operations.Create) {
+      this.createItemMethod = new Method(this, 'CreateItemMethod', {
+        httpMethod: 'POST',
+        resource: this,
+        integration: new LambdaIntegration(props.Configuration.BackendFunction, {
+          proxy: false,
+          credentialsPassthrough: true,
+          requestTemplates: {
+            'application/json': JSON.stringify({
+              UserId: '$context.identity.caller',
+              TeamId: '$context.identity.cognitoIdentityPoolId',
+              OperationName: 'createItem',
+              Data: "'$input.json('$')'"
+            }).split('"\'').join('').split('\'"').join('')
+          },
+          integrationResponses: [
+            {
+              statusCode: '200'
+            }
+          ],
+          passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
+        }),
+        options: {
+          authorizationType: AuthorizationType.IAM,
+          operationName: 'create',
+          // requestModels: {
+          //   'application/json': createRequestModel
+          // },
+          // TODO Response models
+          requestValidator: requestValidator,
+          methodResponses: [
+            {
+              statusCode: '200',
+              // responseModels: {
+              //   'application/json': entityPropsModel
+              // },
+            }
+          ]
+        }
+      });
+    }
 
-    // List entities
-    this.listsMethod = new Method(this, 'ListsMethod', {
-      httpMethod: 'GET',
-      resource: this,
-      integration: new LambdaIntegration(props.Configuration.BackendFunction, {
-        proxy: false,
-        credentialsPassthrough: true,
-        requestTemplates: {
-          'application/json': JSON.stringify({
-            UserId: '$context.identity.caller',
-            TeamId: '$context.identity.cognitoIdentityPoolId',
-            OperationName: 'lists',
-            Data: "'$input.json('$')'" // TODO
-          }).split('"\'').join('').split('\'"').join('')
-        },
-        integrationResponses: [
-          {
-            statusCode: '200'
-          }
-        ],
-        passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
-      }),
-      options: {
-        authorizationType: AuthorizationType.IAM,
-        operationName: 'lists',
-        // FIXME
-        // requestModels: {
-        //   'application/json': listsRequestModel
-        // },
-        requestValidator: requestValidator,
-        methodResponses: [
-          {
-            statusCode: '200',
-            // responseModels: {
-            //   'application/json': entityPropsModel
-            // },
-          }
-        ]
-      }
-    });
+    // List items
+    if (props.Configuration.Operations.List) {
+      this.listItemsMethod = new Method(this, 'ListItemsMethod', {
+        httpMethod: 'GET',
+        resource: this,
+        integration: new LambdaIntegration(props.Configuration.BackendFunction, {
+          proxy: false,
+          credentialsPassthrough: true,
+          requestTemplates: {
+            'application/json': JSON.stringify({
+              UserId: '$context.identity.caller',
+              TeamId: '$context.identity.cognitoIdentityPoolId',
+              OperationName: 'listItems',
+              Data: "'$input.json('$')'" // TODO
+            }).split('"\'').join('').split('\'"').join('')
+          },
+          integrationResponses: [
+            {
+              statusCode: '200'
+            }
+          ],
+          passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
+        }),
+        options: {
+          authorizationType: AuthorizationType.IAM,
+          operationName: 'listItems', // TODO 
+          // FIXME
+          // requestModels: {
+          //   'application/json': listsRequestModel
+          // },
+          requestValidator: requestValidator,
+          methodResponses: [
+            {
+              statusCode: '200',
+              // responseModels: {
+              //   'application/json': entityPropsModel
+              // },
+            }
+          ]
+        }
+      });
+    }
   }
 }

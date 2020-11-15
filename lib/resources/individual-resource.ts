@@ -14,17 +14,17 @@ export class IndividualCRUDResource extends Resource {
   /**
    * Method to get an entity by id
    */
-  public readonly getByIdMethod: Method;
+  public readonly getItemByIdMethod: Method;
 
   /**
    * Method to update an entity
    */
-  public readonly updateMethod: Method;
+  public readonly updateItemMethod: Method;
 
   /**
    * Method to delete an entity
    */
-  public readonly deleteMethod: Method;
+  public readonly deleteItemMethod: Method;
 
   constructor(scope: Construct, id: string, props: ResourceConfiguration) {
     super(scope, id, props);
@@ -36,132 +36,138 @@ export class IndividualCRUDResource extends Resource {
     });
 
     // Get entity by Id
-    this.getByIdMethod = new Method(this, 'GetByIdMethod', {
-      httpMethod: 'GET',
-      resource: this,
-      integration: new LambdaIntegration(props.Configuration.BackendFunction, {
-        proxy: false,
-        credentialsPassthrough: true,
-        requestTemplates: {
-          'application/json': JSON.stringify({
-            UserId: '$context.identity.caller',
-            TeamId: '$context.identity.cognitoIdentityPoolId',
-            OperationName: 'getById',
-            Data: {
-              Id: "$input.params('entityId')"
+    if (props.Configuration.Operations.Read) {
+      this.getItemByIdMethod = new Method(this, 'GetItemByIdMethod', {
+        httpMethod: 'GET',
+        resource: this,
+        integration: new LambdaIntegration(props.Configuration.BackendFunction, {
+          proxy: false,
+          credentialsPassthrough: true,
+          requestTemplates: {
+            'application/json': JSON.stringify({
+              UserId: '$context.identity.caller',
+              TeamId: '$context.identity.cognitoIdentityPoolId',
+              OperationName: 'getItemById',
+              Data: {
+                Id: "$input.params('entityId')"
+              }
+            }).split('"\'').join('').split('\'"').join('')
+          },
+          integrationResponses: [
+            {
+              statusCode: '200'
+            },
+            {
+              statusCode: '404',
+              selectionPattern: 'ENTITY_NOT_FOUND'
             }
-          }).split('"\'').join('').split('\'"').join('')
-        },
-        integrationResponses: [
-          {
-            statusCode: '200'
-          },
-          {
-            statusCode: '404',
-            selectionPattern: 'ENTITY_NOT_FOUND'
-          }
-        ],
-        passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
-      }),
-      options: {
-        authorizationType: AuthorizationType.IAM,
-        operationName: 'getById',
-        requestValidator: requestValidator,
-        methodResponses: [
-          {
-            statusCode: '200'
-          },
-          {
-            statusCode: '404'
-          }
-        ]
-      }
-    });
+          ],
+          passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
+        }),
+        options: {
+          authorizationType: AuthorizationType.IAM,
+          operationName: 'getById',
+          requestValidator: requestValidator,
+          methodResponses: [
+            {
+              statusCode: '200'
+            },
+            {
+              statusCode: '404'
+            }
+          ]
+        }
+      });
+    }
 
     // Update entity
-    this.updateMethod = new Method(this, 'UpdateMethod', {
-      httpMethod: 'PUT',
-      resource: this,
-      integration: new LambdaIntegration(props.Configuration.BackendFunction, {
-        proxy: false,
-        credentialsPassthrough: true,
-        requestTemplates: {
-          'application/json': JSON.stringify({
-            UserId: '$context.identity.caller',
-            TeamId: '$context.identity.cognitoIdentityPoolId',
-            OperationName: 'update',
-            Data: {
-              Id: "$input.params('entityId')",
-              Changes: "'$input.json('$')'"
+    if (props.Configuration.Operations.Update) {
+      this.updateItemMethod = new Method(this, 'UpdateItemMethod', {
+        httpMethod: 'PUT',
+        resource: this,
+        integration: new LambdaIntegration(props.Configuration.BackendFunction, {
+          proxy: false,
+          credentialsPassthrough: true,
+          requestTemplates: {
+            'application/json': JSON.stringify({
+              UserId: '$context.identity.caller',
+              TeamId: '$context.identity.cognitoIdentityPoolId',
+              OperationName: 'updateItem',
+              Data: {
+                Id: "$input.params('entityId')",
+                Changes: "'$input.json('$')'"
+              }
+            }).split('"\'').join('').split('\'"').join('')
+          },
+          integrationResponses: [
+            {
+              statusCode: '200'
+            },
+            
+          ],
+          passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
+        }),
+        options: {
+          authorizationType: AuthorizationType.IAM,
+          operationName: 'update',
+          requestValidator: requestValidator,
+          methodResponses: [
+            {
+              statusCode: '200',
+              // TODO Response model
+            },
+            {
+              statusCode: '404'
             }
-          }).split('"\'').join('').split('\'"').join('')
-        },
-        integrationResponses: [
-          {
-            statusCode: '200'
-          },
-          
-        ],
-        passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
-      }),
-      options: {
-        authorizationType: AuthorizationType.IAM,
-        operationName: 'update',
-        requestValidator: requestValidator,
-        methodResponses: [
-          {
-            statusCode: '200',
-            // TODO Response model
-          },
-          {
-            statusCode: '404'
-          }
-        ]
-      }
-    });
+          ]
+        }
+      });
+    }
 
     // Delete entity
-    this.deleteMethod = new Method(this, 'DeleteMethod', {
-      httpMethod: 'DELETE',
-      resource: this,
-      integration: new LambdaIntegration(props.Configuration.BackendFunction, {
-        proxy: false,
-        credentialsPassthrough: true,
-        requestTemplates: {
-          'application/json': JSON.stringify({
-            UserId: '$context.identity.caller',
-            TeamId: '$context.identity.cognitoIdentityPoolId',
-            OperationName: 'delete',
-            Data: {
-              Id: "$input.params('entityId')"
+    if (props.Configuration.Operations.Delete) {
+      this.deleteItemMethod = new Method(this, 'DeleteItemMethod', {
+        httpMethod: 'DELETE',
+        resource: this,
+        integration: new LambdaIntegration(props.Configuration.BackendFunction, {
+          proxy: false,
+          credentialsPassthrough: true,
+          requestTemplates: {
+            'application/json': JSON.stringify({
+              UserId: '$context.identity.caller',
+              TeamId: '$context.identity.cognitoIdentityPoolId',
+              OperationName: 'deleteItem',
+              Data: {
+                Id: "$input.params('entityId')"
+              }
+            }).split('"\'').join('').split('\'"').join('')
+          },
+          integrationResponses: [
+            {
+              statusCode: '204'
+            },
+            {
+              statusCode: '404',
+              selectionPattern: 'ENTITY_NOT_FOUND'
             }
-          }).split('"\'').join('').split('\'"').join('')
-        },
-        integrationResponses: [
-          {
-            statusCode: '204'
-          },
-          {
-            statusCode: '404',
-            selectionPattern: 'ENTITY_NOT_FOUND'
-          }
-        ],
-        passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
-      }),
-      options: {
-        authorizationType: AuthorizationType.IAM,
-        operationName: 'delete',
-        requestValidator: requestValidator,
-        methodResponses: [
-          {
-            statusCode: '204'
-          },
-          {
-            statusCode: '404'
-          }
-        ]
-      }
-    });
+          ],
+          passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
+        }),
+        options: {
+          authorizationType: AuthorizationType.IAM,
+          operationName: 'delete',
+          requestValidator: requestValidator,
+          methodResponses: [
+            {
+              statusCode: '204'
+            },
+            {
+              statusCode: '404'
+            }
+          ]
+        }
+      });
+    }
 
     // Add permissions to function to handle these methods
     props.Configuration.BackendFunction.addToRolePolicy(new PolicyStatement({
