@@ -120,7 +120,13 @@ export class GlobalCRUDResource extends Resource {
           },
           integrationResponses: [
             {
-              statusCode: '200'
+              statusCode: '200',
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': `'*'`,
+                'method.response.header.access-control-allow-headers': `'*'`,
+                'method.response.header.access-control-allow-methods': `'*'`,
+                'method.response.header.access-control-allow-credentials': `'true'`,
+              }
             }
           ],
           passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
@@ -139,6 +145,12 @@ export class GlobalCRUDResource extends Resource {
               // responseModels: {
               //   'application/json': entityPropsModel
               // },
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': true,
+                'method.response.header.access-control-allow-headers': true,
+                'method.response.header.access-control-allow-methods': true,
+                'method.response.header.access-control-allow-credentials': true
+              }
             }
           ]
         }
