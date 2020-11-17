@@ -1,9 +1,9 @@
 import { IRestApi, RestApi } from '@aws-cdk/aws-apigateway';
 import { AttributeType, BillingMode, ITable, Table } from '@aws-cdk/aws-dynamodb';
-import { PolicyStatement } from '@aws-cdk/aws-iam';
+import { PolicyStatement, ServicePrincipal } from '@aws-cdk/aws-iam';
 import { AssetCode, Function, IFunction, Runtime } from '@aws-cdk/aws-lambda';
 import * as cdk from '@aws-cdk/core';
-import { CfnOutput, RemovalPolicy, ResourceEnvironment } from '@aws-cdk/core';
+import { Aws, CfnOutput, RemovalPolicy, ResourceEnvironment } from '@aws-cdk/core';
 import { BaseCrudApiProps } from './models';
 import { GlobalCRUDResource } from './resources/global-resource';
 import { IndividualCRUDResource } from './resources/individual-resource';
@@ -48,6 +48,12 @@ export class BaseCrudApi extends cdk.Construct {
       environment: {
         ITEMS_TABLE_NAME: this.table.tableName
       }
+    });
+
+    this.backendFunction.addPermission('ApiInvoke', {
+      principal: new ServicePrincipal('apigateway.amazon.com'),
+      action: 'lambda:InvokeFunction',
+      sourceArn: `arn:aws:execute-api:${Aws.REGION}:${Aws.ACCOUNT_ID}:${this.api.restApiId}/*`
     });
 
     if (!props.BackendFunction) {
