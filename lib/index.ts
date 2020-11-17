@@ -50,12 +50,6 @@ export class BaseCrudApi extends cdk.Construct {
       }
     });
 
-    this.backendFunction.addPermission('ApiInvoke', {
-      principal: new ServicePrincipal('apigateway.amazonaws.com'),
-      action: 'lambda:InvokeFunction',
-      sourceArn: `arn:aws:execute-api:${Aws.REGION}:${Aws.ACCOUNT_ID}:${this.api.restApiId}/*`
-    });
-
     if (!props.BackendFunction) {
       this.backendFunction.addToRolePolicy(new PolicyStatement({
         actions: [
