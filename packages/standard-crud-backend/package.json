@@ -17,7 +17,7 @@
     "@types/node": "^14.14.6",
     "@types/sinon": "^9.0.8",
     "@types/uuid": "^8.3.0",
-    "aws-sdk": "^2.793.0",
+    "aws-sdk": "^2.794.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "mocha": "^8.2.0",
