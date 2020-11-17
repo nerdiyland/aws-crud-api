@@ -83,7 +83,7 @@ export class GlobalCRUDResource extends Resource {
         }),
         options: {
           authorizationType: AuthorizationType.IAM,
-          operationName: 'create',
+          operationName: props.Configuration.Operations.Create!.OperationName,
           // requestModels: {
           //   'application/json': createRequestModel
           // },
@@ -133,7 +133,7 @@ export class GlobalCRUDResource extends Resource {
         }),
         options: {
           authorizationType: AuthorizationType.IAM,
-          operationName: 'listItems', // TODO 
+          operationName: props.Configuration.Operations.List!.OperationName,
           // FIXME
           // requestModels: {
           //   'application/json': listsRequestModel
