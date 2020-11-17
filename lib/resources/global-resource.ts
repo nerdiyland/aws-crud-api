@@ -1,4 +1,4 @@
-import { AuthorizationType, LambdaIntegration, Method, Model, PassthroughBehavior, RequestValidator, Resource, ResourceProps } from "@aws-cdk/aws-apigateway";
+import { AuthorizationType, LambdaIntegration, Method, MethodOptions, Model, PassthroughBehavior, RequestValidator, Resource, ResourceProps } from "@aws-cdk/aws-apigateway";
 import { Construct } from "@aws-cdk/core";
 import { ITable } from '@aws-cdk/aws-dynamodb';
 import { PolicyStatement } from '@aws-cdk/aws-iam';
@@ -59,6 +59,38 @@ export class GlobalCRUDResource extends Resource {
     
     // Create item
     if(props.Configuration.Operations.Create) {
+      let inputModel: Model;
+      
+      const createMethodOptions: MethodOptions = {
+        authorizationType: AuthorizationType.IAM,
+        operationName: props.Configuration.Operations.Create!.OperationName,
+        // TODO Response models
+        requestValidator: requestValidator,
+        methodResponses: [
+          {
+            statusCode: '200',
+            // responseModels: {
+            //   'application/json': entityPropsModel
+            // },
+          }
+        ]
+      };
+        
+      if (props.Configuration.Operations.Create!.InputModel) {
+        inputModel = new Model(this, 'CreateMethodInputModel', {
+          restApi: this.api,
+          schema: props.Configuration.Operations.Create!.InputModel!.Schema,
+          contentType: 'application/json',
+          modelName: props.Configuration.Operations.Create!.InputModel!.ModelName
+        })
+
+        // @ts-ignore
+        createMethodOptions.requestModels = {
+          'application/json': inputModel!
+        }
+      }
+      
+
       this.createItemMethod = new Method(this, 'CreateItemMethod', {
         httpMethod: 'POST',
         resource: this,
@@ -81,23 +113,7 @@ export class GlobalCRUDResource extends Resource {
           ],
           passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
         }),
-        options: {
-          authorizationType: AuthorizationType.IAM,
-          operationName: props.Configuration.Operations.Create!.OperationName,
-          // requestModels: {
-          //   'application/json': createRequestModel
-          // },
-          // TODO Response models
-          requestValidator: requestValidator,
-          methodResponses: [
-            {
-              statusCode: '200',
-              // responseModels: {
-              //   'application/json': entityPropsModel
-              // },
-            }
-          ]
-        }
+        options: createMethodOptions
       });
     }
 
