@@ -106,7 +106,7 @@ export class GlobalCRUDResource extends Resource {
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
-                UserId: '$context.identity.caller',
+                UserId: '$context.identity.cognitoIdentityId',
                 OperationName: 'createItem',
               },
               Data: "'$input.json('$')'"
@@ -140,7 +140,7 @@ export class GlobalCRUDResource extends Resource {
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
-                UserId: '$context.identity.caller',
+                UserId: '$context.identity.cognitoIdentityId',
                 OperationName: 'listItems',
               },
               Data: "'$input.json('$')'" // TODO
