@@ -1,6 +1,6 @@
 {
   "name": "@aftersignals/base-crud-api",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
