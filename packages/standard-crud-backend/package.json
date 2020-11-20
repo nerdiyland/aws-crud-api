@@ -27,11 +27,7 @@
     "typescript": "^4.1.2"
   },
   "dependencies": {
-<<<<<<< HEAD
-    "@aftersignals/models": "^0.0.36",
-=======
-    "@aftersignals/models": "^0.0.37",
->>>>>>> feat(create): include schemas for operation definition
+    "@aftersignals/models": "^0.0.39",
     "@dazn/lambda-powertools-logger": "^1.24.1",
     "moment": "^2.29.1",
     "uuid": "^8.3.1"

@@ -3,6 +3,8 @@ import { ItemsCrud } from './items-crud';
 import { FunctionEvent } from '@aftersignals/models/apis/base/FunctionEvent';
 import { CreateItemRequest } from '@aftersignals/models/apis/base/contracts/CreateItemRequest';
 import { ListItemsRequest } from '@aftersignals/models/apis/base/contracts/ListItemsRequest';
+import { ExtendedJSONSchema } from '@aftersignals/models/base/ExtendedSchema';
+import Schemas from '@aftersignals/models/schema.extended.json'
 
 export enum OperationType {
   CREATE_ITEM = 'createItem',
@@ -16,13 +18,36 @@ const INVALID_OPERATION_EXCEPTION = new Error('Invalid operation requested');
 
 /* TODO */
 export const handler = async (event: FunctionEvent<any>) => {
-  const { Id, UserId, OperationName } = event.Params;
+  const { 
+    Id, 
+    UserId, 
+    OperationName, 
+    EntitySchema,
+    InputSchema,
+    IdFieldName,
+    ParentFieldName
+  } = event.Params;
+  
   const Data = event.Data;
+
+  let entitySchema: ExtendedJSONSchema | undefined;
+  let inputSchema: ExtendedJSONSchema | undefined;
+  if (EntitySchema) {
+    entitySchema = (Schemas.definitions as { [key: string]: ExtendedJSONSchema })[EntitySchema];
+  }
+
+  if (InputSchema) {
+    inputSchema = (Schemas.definitions as { [key: string]: ExtendedJSONSchema })[InputSchema];
+  }
 
   Log.info('Starting items CRUD request', { UserId, Data, OperationName });
   const itemsCrud = new ItemsCrud({
     UserId,
     ItemsTableName: process.env.ITEMS_TABLE_NAME!,
+    EntitySchema: entitySchema,
+    InputSchema: inputSchema,
+    IdFieldName,
+    ParentFieldName
   });
 
   switch (OperationName) {
@@ -56,7 +81,5 @@ export const handler = async (event: FunctionEvent<any>) => {
     default:
       Log.error('Unknown operation requested', { OperationName });
       throw INVALID_OPERATION_EXCEPTION;
-
   }
-
 };

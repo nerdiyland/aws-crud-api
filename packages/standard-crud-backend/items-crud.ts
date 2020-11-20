@@ -1,4 +1,4 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { DocumentClient, QueryOutput, ScanOutput } from 'aws-sdk/clients/dynamodb';
 import { v4 as uuid } from 'uuid';
 import moment from 'moment';
 import { StandaloneObject } from '@aftersignals/models/base/StandaloneObject';
@@ -7,6 +7,7 @@ import { ListItemsRequest } from '@aftersignals/models/apis/base/contracts/ListI
 import { ListItemsResponse } from '@aftersignals/models/apis/base/contracts/ListItemsResponse'
 import { ExtendedJSONSchema } from '@aftersignals/models/base/ExtendedSchema'
 import { Scaffold } from '@aftersignals/models/util/scaffold';
+import Log from '@dazn/lambda-powertools-logger';
 import Schemas from '@aftersignals/models/schema.extended.json';
 
 /**
@@ -47,14 +48,17 @@ export interface ItemsCrudProps {
   /**
    * Schema used by `create` operations to define the required initial data
    */
-  CreateInputSchema?: ExtendedJSONSchema;
+  InputSchema?: ExtendedJSONSchema;
 
   /**
    * Schema used by the entity that this API manages. If none is defined, the `CreateInputSchema` is used to define objects
    */
   EntitySchema?: ExtendedJSONSchema;
 
-  // TODO IdField, ParentField, Models. AND TESTS
+  /**
+   * ID of the parent of this entity, if any
+   */
+  ParentId?: string;
 }
 
 /**
@@ -142,7 +146,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     // TODO Validate model
-    const schema: ExtendedJSONSchema = (this.props.CreateInputSchema || Schemas.definitions.CreateItemRequest) as any;
+    const schema: ExtendedJSONSchema = (this.props.InputSchema || Schemas.definitions.CreateItemRequest) as any;
     const scaffold = new Scaffold(schema, { ...request, UserId: this.props.UserId });
     const Item: C = scaffold.data;
 
@@ -200,14 +204,30 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
   async listItems (request?: ListItemsRequest<L>): Promise<ListItemsResponse<R>> {
     
     // TODO Paging in
-    
-    const items = await this.ddb.scan({
-      TableName: this.props.ItemsTableName
-    }).promise();
+
+    let items: QueryOutput | ScanOutput;
+    if (this.props.ParentId === undefined) {
+      Log.info('Scanning items');
+      items = await this.ddb.scan({
+        TableName: this.props.ItemsTableName
+      }).promise();
+    } else {
+      Log.info('Fetching items by ParentId', { ParentId: this.props.ParentId, ParentIdField: this.props.ParentFieldName });
+      items = await this.ddb.query({
+        TableName: this.props.ItemsTableName,
+        KeyConditionExpression: '#parentId = :parentId',
+        ExpressionAttributeNames: {
+          '#parentId': this.props.ParentFieldName!
+        },
+        ExpressionAttributeValues: {
+          ':parentId': this.props.ParentId
+        }
+      }).promise();
+    }
 
     // TODO Paging out
 
-    return items.Items! as ListItemsResponse<R>;
+    return items.Items! as any;
   }
 
   /**

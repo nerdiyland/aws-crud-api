@@ -66,6 +66,11 @@ export interface BaseCrudApiProps {
      * Defines the operations that this API should enable consumers to use
      */
     Operations: BaseCrudApiOperations;
+
+    /**
+     * Name of the schema that this api should manage
+     */
+    EntitySchema?: string;
   }
   
   export interface BaseCrudApiTableConfigurationProps {

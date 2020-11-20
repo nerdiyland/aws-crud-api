@@ -22,7 +22,7 @@
     "@aws-cdk/core": "1.74.0"
   },
   "dependencies": {
-    "@aftersignals/models": "^0.0.37",
+    "@aftersignals/models": "^0.0.39",
     "@aws-cdk/aws-apigateway": "^1.74.0",
     "@aws-cdk/aws-dynamodb": "^1.74.0",
     "@aws-cdk/aws-iam": "^1.74.0",

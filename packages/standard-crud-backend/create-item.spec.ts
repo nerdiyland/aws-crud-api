@@ -60,7 +60,7 @@ describe('The `createItem` method of the items CRUD service', () => {
           UserId: '123',
           ItemsTableName: 'dummy',
           AwsRegion: 'dummy',
-          CreateInputSchema: {
+          InputSchema: {
             properties: {
               Name: {
                 type: DataType.STRING,
