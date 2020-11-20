@@ -30,6 +30,26 @@ export interface BaseCrudApiProps {
      * If none is set, the global resource will be used.
      */
     IndividualParent?: IResource;
+
+    /**
+     * Optional name of the id field in the API definition. This is required if you're using parent-based resources
+     */
+    IdFieldName?: string;
+
+    /**
+     * Optional name of the ParentId field, to use in the tables
+     */
+    ParentFieldName?: string;
+
+    /**
+     * Optional name for the {id} field in the api resource. By default it's set to `id`
+     */
+    IdResourceName?: string; 
+
+    /**
+     * Optional name for the id of this resource's parent.
+     */
+    ParentResourceName?: string;
   
     /**
      * Table to use for CRUD operations. If none is given, a table will be created.

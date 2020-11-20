@@ -5,6 +5,9 @@ import { StandaloneObject } from '@aftersignals/models/base/StandaloneObject';
 import { CreateItemRequest } from '@aftersignals/models/apis/base/contracts/CreateItemRequest'
 import { ListItemsRequest } from '@aftersignals/models/apis/base/contracts/ListItemsRequest'
 import { ListItemsResponse } from '@aftersignals/models/apis/base/contracts/ListItemsResponse'
+import { ExtendedJSONSchema } from '@aftersignals/models/base/ExtendedSchema'
+import { Scaffold } from '@aftersignals/models/util/scaffold';
+import Schemas from '@aftersignals/models/schema.extended.json';
 
 /**
  * Configures the Items CRUD service
@@ -30,6 +33,28 @@ export interface ItemsCrudProps {
    * Region where this service is deployed
    */
   AwsRegion?: string;
+
+  /**
+   * Name of the field that this entity's management uses as identifier. `Id` is used by default
+   */
+  IdFieldName?: string;
+
+  /**
+   * If the entity has a parent, name of the identifier of such parent in the entity's model
+   */
+  ParentFieldName?: string;
+
+  /**
+   * Schema used by `create` operations to define the required initial data
+   */
+  CreateInputSchema?: ExtendedJSONSchema;
+
+  /**
+   * Schema used by the entity that this API manages. If none is defined, the `CreateInputSchema` is used to define objects
+   */
+  EntitySchema?: ExtendedJSONSchema;
+
+  // TODO IdField, ParentField, Models. AND TESTS
 }
 
 /**
@@ -117,16 +142,9 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     // TODO Validate model
-
-    const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    const id = uuid();
-    const Item: C = {
-      ...request,
-      UserId: this.props.UserId,
-      Id: id,
-      CreatedAt: now,
-      UpdatedAt: now,
-    }
+    const schema: ExtendedJSONSchema = (this.props.CreateInputSchema || Schemas.definitions.CreateItemRequest) as any;
+    const scaffold = new Scaffold(schema, { ...request, UserId: this.props.UserId });
+    const Item: C = scaffold.data;
 
     await this.ddb.put({
       TableName: this.props.ItemsTableName,
@@ -179,7 +197,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
   /**
    * Lists the existing items in the database
    */
-  async listItems (request: ListItemsRequest<L>): Promise<ListItemsResponse<R>> {
+  async listItems (request?: ListItemsRequest<L>): Promise<ListItemsResponse<R>> {
     
     // TODO Paging in
     

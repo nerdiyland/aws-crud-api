@@ -46,7 +46,8 @@ export class IndividualCRUDResource extends Resource {
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
-                Id: "$input.params('entityId')",
+                [props.Configuration.IdFieldName || 'Id']: `$input.params('${props.Configuration.IdResourceName || 'id'}')`,
+                [props.Configuration.ParentFieldName!]: props.Configuration.ParentResourceName ? `$input.params('${props.Configuration.ParentResourceName}')` : undefined,
                 UserId: '$context.identity.caller',
                 OperationName: 'getItemById',
               },

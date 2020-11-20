@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { UpdateItemInput } from 'aws-sdk/clients/dynamodb';
 
 describe('The `updateItem` method of the items CRUD service', () => {
-  let service: ItemsCrud<any, any, any, any>;
+  let service: ItemsCrud<any, any, any, any, any>;
   
   beforeEach(() => {
     service = new ItemsCrud({

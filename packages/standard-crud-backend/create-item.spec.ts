@@ -1,9 +1,11 @@
 import { ItemsCrud } from './items-crud';
 import { expect } from 'chai';
 import { PutItemInput } from 'aws-sdk/clients/dynamodb';
+import { PropertyGenerator } from '@aftersignals/models/base/ExtendedSchema';
+import { DataType } from '@aftersignals/models/forms/DataTypes';
 
 describe('The `createItem` method of the items CRUD service', () => {
-  let service: ItemsCrud<any, any, any, any> | null = null;
+  let service: ItemsCrud<any, any, any, any, any> | null = null;
 
   beforeEach(() => {
     service = new ItemsCrud({
@@ -50,6 +52,48 @@ describe('The `createItem` method of the items CRUD service', () => {
         Name: 'dummy',
         Description: 'Dummy item'
       }).catch(e => done(e))
+    });
+
+    describe('and schemas', () => {
+      it('Must create a request using the provided schema', done => {
+        const service = new ItemsCrud({
+          UserId: '123',
+          ItemsTableName: 'dummy',
+          AwsRegion: 'dummy',
+          CreateInputSchema: {
+            properties: {
+              Name: {
+                type: DataType.STRING,
+                default: '1234'
+              },
+              Description: {
+                type: DataType.STRING
+              },
+              CreationDate: {
+                type: DataType.STRING,
+                generator: PropertyGenerator.FORMATTED_DATE
+              }
+            }
+          },
+          DocumentClient: {
+            // @ts-ignore
+            put: (request: PutItemInput) => ({
+              async promise() {
+                expect(request.TableName).to.equals('dummy');
+                expect(request.Item.Name).to.equals('1234');
+                expect(request.Item.Description).to.equals('Dummy item');
+                expect(request.Item.CreationDate).not.to.be.undefined;
+                expect(request.Item.UserId).to.equals('123');
+                done();
+              }
+            })
+          }
+        });
+        
+        service!.createItem({
+          Description: 'Dummy item'
+        }).catch(e => done(e))
+      });
     });
 
     it('Must return a valid item as output', async () => {

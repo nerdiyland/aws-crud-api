@@ -6,7 +6,7 @@ import { GetItemInput } from 'aws-sdk/clients/dynamodb';
 chai.use(chaiAsPromised);
 
 describe('The `getItemById` method of the items CRUD service', () => {
-  let service: ItemsCrud<any, any, any, any>;
+  let service: ItemsCrud<any, any, any, any, any>;
   
   beforeEach(() => {
     service = new ItemsCrud({

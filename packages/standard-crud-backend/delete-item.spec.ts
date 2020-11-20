@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { DeleteItemInput } from 'aws-sdk/clients/dynamodb';
 
 describe('The `deleteItem` method of the items CRUD service', () => {
-  let service: ItemsCrud<any, any, any, any>;
+  let service: ItemsCrud<any, any, any, any, any>;
   
   beforeEach(() => {
     service = new ItemsCrud({

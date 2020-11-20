@@ -19,6 +19,8 @@
     "strictPropertyInitialization":false,
     "typeRoots": ["./node_modules/@types"],
     "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   },
   "exclude": ["cdk.out", "packages"]
 }

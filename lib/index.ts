@@ -35,9 +35,13 @@ export class BaseCrudApi extends cdk.Construct {
       removalPolicy: RemovalPolicy.DESTROY,
       billingMode: BillingMode.PAY_PER_REQUEST,
       partitionKey: {
-        name: 'Id',
+        name: props.ParentResourceName ? props.ParentFieldName || 'ParentId' : props.IdFieldName || 'Id',
         type: AttributeType.STRING
-      }
+      },
+      sortKey: props.ParentResourceName ? {
+        name: props.IdFieldName || 'Id',
+        type: AttributeType.STRING
+      } : undefined
     });
 
     this.backendFunction = props.BackendFunction || new Function(this, 'BackendFunction', {
@@ -46,7 +50,9 @@ export class BaseCrudApi extends cdk.Construct {
       runtime: Runtime.NODEJS_12_X,
       description: `${props.ComponentName}/${props.ResourcePath} - Standard backend for CRUD apis`,
       environment: {
-        ITEMS_TABLE_NAME: this.table.tableName
+        ITEMS_TABLE_NAME: this.table.tableName,
+        ID_PARAM_NAME: props.IdResourceName || 'Id',
+        PARENT_PARAM_NAME: props.ParentResourceName ? props.ParentFieldName || 'ParentId' : 'no'
       }
     });
 
@@ -79,7 +85,7 @@ export class BaseCrudApi extends cdk.Construct {
 
     this.individualResource = new IndividualCRUDResource(this, 'IndividualCRUDResource', {
       parent: props.IndividualParent || this.globalResource,
-      pathPart: `{id}`,
+      pathPart: `{${props.IdResourceName || 'id'}}`,
       Configuration: {
         ...props,
         BackendFunction: this.backendFunction,
