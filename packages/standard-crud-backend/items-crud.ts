@@ -150,7 +150,6 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     const scaffold = new Scaffold(schema, { 
       ...request, 
       UserId: this.props.UserId,
-      [this.props.ParentFieldName || 'ParentId']: this.props.ParentId  
     });
     const Item: C = scaffold.data;
 
