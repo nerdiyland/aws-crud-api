@@ -67,7 +67,7 @@ export class GlobalCRUDResource extends Resource {
         // TODO Response models
         requestValidator: requestValidator,
         requestParameters: {
-          [`request.method.path.${props.Configuration.ParentResourceName || 'parentId'}`]: !!props.Configuration.ParentResourceName
+          [`method.request.path.${props.Configuration.ParentResourceName || 'parentId'}`]: !!props.Configuration.ParentResourceName
         },
         methodResponses: [
           {
@@ -107,7 +107,7 @@ export class GlobalCRUDResource extends Resource {
           proxy: false,
           credentialsPassthrough: true,
           requestParameters: {
-            [`request.integration.path.${props.Configuration.ParentResourceName || 'parentId'}`]: `request.method.path.${props.Configuration.ParentResourceName || 'parentId'}`
+            [`integation.request.path.${props.Configuration.ParentResourceName || 'parentId'}`]: `method.request.path.${props.Configuration.ParentResourceName || 'parentId'}`
           },
           requestTemplates: {
             'application/json': JSON.stringify({
