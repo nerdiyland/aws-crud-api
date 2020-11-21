@@ -149,8 +149,8 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     const schema: ExtendedJSONSchema = (this.props.InputSchema || Schemas.definitions.CreateItemRequest) as any;
     const scaffold = new Scaffold(schema, { 
       ...request, 
-      UserId: this.props.UserId
-      [this.props.ParentFieldName || 'ParentId'] : this.props.ParentId  
+      UserId: this.props.UserId,
+      [this.props.ParentFieldName || 'ParentId']: this.props.ParentId  
     });
     const Item: C = scaffold.data;
 
