@@ -109,7 +109,7 @@ export class GlobalCRUDResource extends Resource {
                 UserId: '$context.identity.cognitoIdentityId',
                 OperationName: 'createItem',
                 EntitySchema: props.Configuration.EntitySchema,
-                InputSchema: props.Configuration.Operations.Create!.InputModel,
+                InputSchema: props.Configuration.Operations.Create!.InputModel ? props.Configuration.Operations.Create!.InputModel!.ModelName : undefined,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
                 ParentId: `$input.params('${props.Configuration.ParentResourceName}')`
@@ -148,7 +148,7 @@ export class GlobalCRUDResource extends Resource {
                 UserId: '$context.identity.cognitoIdentityId',
                 OperationName: 'listItems',
                 EntitySchema: props.Configuration.EntitySchema,
-                InputSchema: props.Configuration.Operations.Create!.InputModel,
+                InputSchema: props.Configuration.Operations.Create!.InputModel ? props.Configuration.Operations.Create!.InputModel!.ModelName : undefined,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
                 ParentId: `$input.params('${props.Configuration.ParentResourceName}')`
