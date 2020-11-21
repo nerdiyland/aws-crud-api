@@ -147,7 +147,11 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     // TODO Validate model
     const schema: ExtendedJSONSchema = (this.props.InputSchema || Schemas.definitions.CreateItemRequest) as any;
-    const scaffold = new Scaffold(schema, { ...request, UserId: this.props.UserId });
+    const scaffold = new Scaffold(schema, { 
+      ...request, 
+      UserId: this.props.UserId
+      [this.props.ParentFieldName || 'ParentId'] : this.props.ParentId  
+    });
     const Item: C = scaffold.data;
 
     await this.ddb.put({
