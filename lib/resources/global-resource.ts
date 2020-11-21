@@ -107,7 +107,7 @@ export class GlobalCRUDResource extends Resource {
           proxy: false,
           credentialsPassthrough: true,
           requestParameters: {
-            [`integation.request.path.${props.Configuration.ParentResourceName || 'parentId'}`]: `method.request.path.${props.Configuration.ParentResourceName || 'parentId'}`
+            [`integation.request.header.${props.Configuration.ParentResourceName || 'parentId'}`]: `method.request.path.${props.Configuration.ParentResourceName || 'parentId'}`
           },
           requestTemplates: {
             'application/json': JSON.stringify({
