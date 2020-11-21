@@ -66,6 +66,9 @@ export class GlobalCRUDResource extends Resource {
         operationName: props.Configuration.Operations.Create!.OperationName,
         // TODO Response models
         requestValidator: requestValidator,
+        requestParameters: {
+          [`request.method.path.${props.Configuration.ParentResourceName || 'parentId'}`]: !!props.Configuration.ParentResourceName
+        },
         methodResponses: [
           {
             statusCode: '200',
@@ -103,6 +106,9 @@ export class GlobalCRUDResource extends Resource {
         integration: new LambdaIntegration(props.Configuration.BackendFunction, {
           proxy: false,
           credentialsPassthrough: true,
+          requestParameters: {
+            [`request.integration.path.${props.Configuration.ParentResourceName || 'parentId'}`]: `request.method.path.${props.Configuration.ParentResourceName || 'parentId'}`
+          },
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
