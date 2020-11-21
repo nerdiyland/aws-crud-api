@@ -106,9 +106,9 @@ export class GlobalCRUDResource extends Resource {
         integration: new LambdaIntegration(props.Configuration.BackendFunction, {
           proxy: false,
           credentialsPassthrough: true,
-          requestParameters: {
+          requestParameters: props.Configuration.ParentResourceName ? {
             'integation.request.header.parent': `method.request.path.${props.Configuration.ParentResourceName || 'parentId'}`
-          },
+          } : undefined,
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
@@ -118,7 +118,7 @@ export class GlobalCRUDResource extends Resource {
                 InputSchema: props.Configuration.Operations.Create!.InputModel ? props.Configuration.Operations.Create!.InputModel!.ModelName : undefined,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
-                ParentId: `$input.params('${props.Configuration.ParentResourceName}')`
+                ParentId: `$input.params('parent')`
               },
               Data: "'$input.json('$')'"
             }).split('"\'').join('').split('\'"').join('')
