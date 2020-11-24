@@ -43,6 +43,9 @@ export class IndividualCRUDResource extends Resource {
         integration: new LambdaIntegration(props.Configuration.BackendFunction, {
           proxy: false,
           credentialsPassthrough: true,
+          requestParameters: {
+            'integration.request.path.id': 'method.request.path.id'
+          },
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
@@ -68,6 +71,9 @@ export class IndividualCRUDResource extends Resource {
           authorizationType: AuthorizationType.IAM,
           operationName: 'getById',
           requestValidator: requestValidator,
+          requestParameters: {
+            'method.request.path.id': true
+          },
           methodResponses: [
             {
               statusCode: '200'
@@ -88,6 +94,9 @@ export class IndividualCRUDResource extends Resource {
         integration: new LambdaIntegration(props.Configuration.BackendFunction, {
           proxy: false,
           credentialsPassthrough: true,
+          requestParameters: {
+            'integration.request.path.id': 'method.request.path.id'
+          },
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
@@ -110,6 +119,9 @@ export class IndividualCRUDResource extends Resource {
           authorizationType: AuthorizationType.IAM,
           operationName: 'update',
           requestValidator: requestValidator,
+          requestParameters: {
+            'method.request.path.id': true
+          },
           methodResponses: [
             {
               statusCode: '200',
@@ -131,6 +143,9 @@ export class IndividualCRUDResource extends Resource {
         integration: new LambdaIntegration(props.Configuration.BackendFunction, {
           proxy: false,
           credentialsPassthrough: true,
+          requestParameters: {
+            'integration.request.path.id': 'method.request.path.id'
+          },
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
@@ -155,6 +170,9 @@ export class IndividualCRUDResource extends Resource {
           authorizationType: AuthorizationType.IAM,
           operationName: 'delete',
           requestValidator: requestValidator,
+          requestParameters: {
+            'method.request.path.id': true
+          },
           methodResponses: [
             {
               statusCode: '204'
