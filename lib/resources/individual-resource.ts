@@ -58,11 +58,23 @@ export class IndividualCRUDResource extends Resource {
           },
           integrationResponses: [
             {
-              statusCode: '200'
+              statusCode: '200',
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': `'*'`,
+                'method.response.header.access-control-allow-headers': `'*'`,
+                'method.response.header.access-control-allow-methods': `'*'`,
+                'method.response.header.access-control-allow-credentials': `'true'`,
+              }
             },
             {
               statusCode: '404',
-              selectionPattern: 'ENTITY_NOT_FOUND'
+              selectionPattern: 'ENTITY_NOT_FOUND',
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': `'*'`,
+                'method.response.header.access-control-allow-headers': `'*'`,
+                'method.response.header.access-control-allow-methods': `'*'`,
+                'method.response.header.access-control-allow-credentials': `'true'`,
+              }
             }
           ],
           passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
@@ -76,10 +88,22 @@ export class IndividualCRUDResource extends Resource {
           },
           methodResponses: [
             {
-              statusCode: '200'
+              statusCode: '200',
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': true,
+                'method.response.header.access-control-allow-headers': true,
+                'method.response.header.access-control-allow-methods': true,
+                'method.response.header.access-control-allow-credentials': true
+              }
             },
             {
-              statusCode: '404'
+              statusCode: '404',
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': true,
+                'method.response.header.access-control-allow-headers': true,
+                'method.response.header.access-control-allow-methods': true,
+                'method.response.header.access-control-allow-credentials': true
+              }
             }
           ]
         }
@@ -109,7 +133,13 @@ export class IndividualCRUDResource extends Resource {
           },
           integrationResponses: [
             {
-              statusCode: '200'
+              statusCode: '200',
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': `'*'`,
+                'method.response.header.access-control-allow-headers': `'*'`,
+                'method.response.header.access-control-allow-methods': `'*'`,
+                'method.response.header.access-control-allow-credentials': `'true'`,
+              }
             },
             
           ],
@@ -125,10 +155,22 @@ export class IndividualCRUDResource extends Resource {
           methodResponses: [
             {
               statusCode: '200',
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': true,
+                'method.response.header.access-control-allow-headers': true,
+                'method.response.header.access-control-allow-methods': true,
+                'method.response.header.access-control-allow-credentials': true
+              }
               // TODO Response model
             },
             {
-              statusCode: '404'
+              statusCode: '404',
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': true,
+                'method.response.header.access-control-allow-headers': true,
+                'method.response.header.access-control-allow-methods': true,
+                'method.response.header.access-control-allow-credentials': true
+              }
             }
           ]
         }
@@ -157,10 +199,22 @@ export class IndividualCRUDResource extends Resource {
           },
           integrationResponses: [
             {
-              statusCode: '204'
+              statusCode: '204',
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': `'*'`,
+                'method.response.header.access-control-allow-headers': `'*'`,
+                'method.response.header.access-control-allow-methods': `'*'`,
+                'method.response.header.access-control-allow-credentials': `'true'`,
+              }
             },
             {
               statusCode: '404',
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': `'*'`,
+                'method.response.header.access-control-allow-headers': `'*'`,
+                'method.response.header.access-control-allow-methods': `'*'`,
+                'method.response.header.access-control-allow-credentials': `'true'`,
+              },
               selectionPattern: 'ENTITY_NOT_FOUND'
             }
           ],
@@ -175,10 +229,22 @@ export class IndividualCRUDResource extends Resource {
           },
           methodResponses: [
             {
-              statusCode: '204'
+              statusCode: '204',
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': true,
+                'method.response.header.access-control-allow-headers': true,
+                'method.response.header.access-control-allow-methods': true,
+                'method.response.header.access-control-allow-credentials': true
+              }
             },
             {
-              statusCode: '404'
+              statusCode: '404',
+              responseParameters: {
+                'method.response.header.access-control-allow-origin': true,
+                'method.response.header.access-control-allow-headers': true,
+                'method.response.header.access-control-allow-methods': true,
+                'method.response.header.access-control-allow-credentials': true
+              }
             }
           ]
         }
