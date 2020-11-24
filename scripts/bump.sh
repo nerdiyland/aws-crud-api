@@ -10,5 +10,4 @@ npm run build
 git config --global user.email autobot@aftersignals.com
 git config --global user.name "AfterSignals Automation"
 npm version patch -m "[skip ci] publish new version"
-git push
 npm publish
