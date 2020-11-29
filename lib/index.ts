@@ -1,3 +1,4 @@
+import { RetentionDays } from '@aws-cdk/aws-logs';
 import { IRestApi, RestApi } from '@aws-cdk/aws-apigateway';
 import { AttributeType, BillingMode, ITable, Table } from '@aws-cdk/aws-dynamodb';
 import { PolicyStatement, ServicePrincipal } from '@aws-cdk/aws-iam';
@@ -49,6 +50,7 @@ export class BaseCrudApi extends cdk.Construct {
       handler: 'index.handler',
       runtime: Runtime.NODEJS_12_X,
       description: `${props.ComponentName}/${props.ResourcePath} - Standard backend for CRUD apis`,
+      logRetention: RetentionDays.ONE_WEEK,
       environment: {
         ITEMS_TABLE_NAME: this.table.tableName,
         ID_PARAM_NAME: props.IdResourceName || 'Id',

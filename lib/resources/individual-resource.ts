@@ -1,4 +1,4 @@
-import { Resource, Method, RequestValidator, LambdaIntegration, PassthroughBehavior, AuthorizationType } from '@aws-cdk/aws-apigateway';
+import { Resource, Method, RequestValidator, LambdaIntegration, PassthroughBehavior, AuthorizationType, Model } from '@aws-cdk/aws-apigateway';
 import { Construct } from '@aws-cdk/core';
 import { ResourceConfiguration } from './global-resource';
 import { Function } from '@aws-cdk/aws-lambda';
@@ -112,6 +112,17 @@ export class IndividualCRUDResource extends Resource {
 
     // Update entity
     if (props.Configuration.Operations.Update) {
+      let inputModel: Model;
+      
+      // if (props.Configuration.Operations.Update!.InputModel) {
+      //   inputModel = new Model(this, 'UpdateMethodInputModel', {
+      //     restApi: this.api,
+      //     schema: props.Configuration.Operations.Update!.InputModel!.Schema,
+      //     contentType: 'application/json',
+      //     modelName: props.Configuration.Operations.Update!.InputModel!.ModelName
+      //   })
+      // }
+
       this.updateItemMethod = new Method(this, 'UpdateItemMethod', {
         httpMethod: 'PUT',
         resource: this,
@@ -124,9 +135,11 @@ export class IndividualCRUDResource extends Resource {
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
-                Id: "$input.params('entityId')",
+                Id: "$input.params('id')",
                 UserId: '$context.identity.caller',
                 OperationName: 'updateItem',
+                IdFieldName: props.Configuration.IdFieldName,
+                ParentFieldName: props.Configuration.ParentFieldName,
               },
               Data: "'$input.json('$')'"
             }).split('"\'').join('').split('\'"').join('')
@@ -152,6 +165,9 @@ export class IndividualCRUDResource extends Resource {
           requestParameters: {
             'method.request.path.id': true
           },
+          // requestModels: props.Configuration.Operations.Update!.InputModel ? {
+          //   'application/json': inputModel!
+          // } : undefined,
           methodResponses: [
             {
               statusCode: '200',
@@ -191,7 +207,7 @@ export class IndividualCRUDResource extends Resource {
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
-                Id: "$input.params('entityId')",
+                Id: "$input.params('id')",
                 UserId: '$context.identity.caller',
                 OperationName: 'deleteItem',
               }

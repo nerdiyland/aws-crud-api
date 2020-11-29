@@ -29,6 +29,7 @@ export const handler = async (event: FunctionEvent<any>) => {
   } = event.Params;
   
   const Data = event.Data;
+  Log.debug('Event object', { event })
 
   let entitySchema: ExtendedJSONSchema | undefined;
   let inputSchema: ExtendedJSONSchema | undefined;

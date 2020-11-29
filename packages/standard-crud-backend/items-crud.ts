@@ -247,20 +247,30 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       throw ItemsCrud.INVALID_REQUEST_OBJECT;
     }
 
+    // TODO Test this
+    const idField = this.props.IdFieldName || 'Id';
+    const parentField = this.props.ParentFieldName;
+
+    let parent = parentField ? (request as any)[parentField] : undefined;
+    
+    delete (request as any)[idField];
+    if (parentField) delete (request as any)[parentField];
+
     const changedKeys = Object.keys(request);
     if (!changedKeys.length) {
       throw ItemsCrud.NO_CHANGES_EXCEPTION;
     }
 
     const validProperties: string[] = [] // TODO
-    if (changedKeys.filter(k => validProperties.indexOf(k) === -1).length) {
-      throw ItemsCrud.INVALID_REQUEST_OBJECT;
-    }
+    // if (changedKeys.filter(k => validProperties.indexOf(k) === -1).length) {
+    //   throw ItemsCrud.INVALID_REQUEST_OBJECT;
+    // }
 
     const requestObject: DocumentClient.UpdateItemInput = {
       TableName: this.props.ItemsTableName,
       Key: {
-        Id: itemId
+        Id: itemId,
+        [parentField || 'parent']: parent
       },
       UpdateExpression: `set ${changedKeys.map(k => `#${k} = :${k}`).join(', ')}`.trim(),
       ExpressionAttributeNames: changedKeys.map(k => ({ [`#${k}`]: k })).reduce((t: any, i: any) => ({ ...t, ...i }), {}),

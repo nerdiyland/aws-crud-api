@@ -66,9 +66,6 @@ export class GlobalCRUDResource extends Resource {
         operationName: props.Configuration.Operations.Create!.OperationName,
         // TODO Response models
         requestValidator: requestValidator,
-        requestParameters: {
-          [`method.request.path.${props.Configuration.ParentResourceName || 'parentId'}`]: !!props.Configuration.ParentResourceName
-        },
         methodResponses: [
           {
             statusCode: '200',
@@ -85,20 +82,27 @@ export class GlobalCRUDResource extends Resource {
         ]
       };
         
-      if (props.Configuration.Operations.Create!.InputModel) {
-        inputModel = new Model(this, 'CreateMethodInputModel', {
-          restApi: this.api,
-          schema: props.Configuration.Operations.Create!.InputModel!.Schema,
-          contentType: 'application/json',
-          modelName: props.Configuration.Operations.Create!.InputModel!.ModelName
-        })
+      // if (props.Configuration.Operations.Create!.InputModel) {
+      //   inputModel = new Model(this, 'CreateMethodInputModel', {
+      //     restApi: this.api,
+      //     schema: props.Configuration.Operations.Create!.InputModel!.Schema,
+      //     contentType: 'application/json',
+      //     modelName: props.Configuration.Operations.Create!.InputModel!.ModelName
+      //   })
+
+      //   // @ts-ignore
+      //   createMethodOptions.requestModels = {
+      //     'application/json': inputModel!
+      //   }
+      // }
+      
+      if (props.Configuration.ParentResourceName) {
 
         // @ts-ignore
-        createMethodOptions.requestModels = {
-          'application/json': inputModel!
+        createMethodOptions.requestParameters = {
+          [`method.request.path.${props.Configuration.ParentResourceName || 'parentId'}`]: !!props.Configuration.ParentResourceName
         }
       }
-      
 
       this.createItemMethod = new Method(this, 'CreateItemMethod', {
         httpMethod: 'POST',
