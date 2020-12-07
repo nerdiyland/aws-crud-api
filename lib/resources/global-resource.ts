@@ -104,10 +104,11 @@ export class GlobalCRUDResource extends Resource {
         }
       }
 
+      const fn = props.Configuration.Operations.Create.BackendFunction || props.Configuration.BackendFunction;
       this.createItemMethod = new Method(this, 'CreateItemMethod', {
         httpMethod: 'POST',
         resource: this,
-        integration: new LambdaIntegration(props.Configuration.BackendFunction, {
+        integration: new LambdaIntegration(fn, {
           proxy: false,
           credentialsPassthrough: true,
           requestParameters: !!props.Configuration.ParentResourceName ? {

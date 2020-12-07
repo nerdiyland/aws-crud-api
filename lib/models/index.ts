@@ -92,6 +92,7 @@ export interface BaseCrudApiProps {
     OperationName: string;
     InputModel?: BaseCrudApiOperationModelConfiguration;
     Responses?: BaseCrudApiOperationResponseConfiguration[];
+    BackendFunction?: IFunction;
   }
   
   export interface BaseCrudApiOperationResponseConfiguration {
