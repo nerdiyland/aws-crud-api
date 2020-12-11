@@ -205,9 +205,10 @@ export class IndividualCRUDResource extends Resource {
             'integration.request.path.id': 'method.request.path.id'
           },
           requestTemplates: {
-            'application/json': JSON.stringify({
+            'text/plain': JSON.stringify({
               Params: {
-                Id: "$input.params('id')",
+                [props.Configuration.IdFieldName || 'Id']: `$input.params('${props.Configuration.IdResourceName || 'id'}')`,
+                [props.Configuration.ParentFieldName!]: props.Configuration.ParentResourceName ? `$input.params('${props.Configuration.ParentResourceName}')` : undefined,
                 UserId: '$context.identity.caller',
                 OperationName: 'deleteItem',
               }
@@ -215,7 +216,7 @@ export class IndividualCRUDResource extends Resource {
           },
           integrationResponses: [
             {
-              statusCode: '204',
+              statusCode: '200',
               responseParameters: {
                 'method.response.header.access-control-allow-origin': `'*'`,
                 'method.response.header.access-control-allow-headers': `'*'`,
@@ -239,13 +240,12 @@ export class IndividualCRUDResource extends Resource {
         options: {
           authorizationType: AuthorizationType.IAM,
           operationName: 'delete',
-          requestValidator: requestValidator,
           requestParameters: {
             'method.request.path.id': true
           },
           methodResponses: [
             {
-              statusCode: '204',
+              statusCode: '200',
               responseParameters: {
                 'method.response.header.access-control-allow-origin': true,
                 'method.response.header.access-control-allow-headers': true,

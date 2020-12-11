@@ -59,6 +59,18 @@ export interface ItemsCrudProps {
    * ID of the parent of this entity, if any
    */
   ParentId?: string;
+
+  /**
+   * Table alias to use
+   */
+  IndexName?: string;
+
+  /**
+   * Type of list operation
+   */
+  ListType?: 'global' | 'owned';
+
+  OutputFields?: string[];
 }
 
 /**
@@ -209,12 +221,21 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     // TODO Paging in
 
     let items: QueryOutput | ScanOutput;
-    if (this.props.ParentId === undefined) {
-      Log.info('Scanning items');
-      items = await this.ddb.scan({
-        TableName: this.props.ItemsTableName
+    if (this.props.ListType === 'owned') {
+      Log.info('Fetching owned items', { UserId: this.props.UserId });
+      items = await this.ddb.query({
+        TableName: this.props.ItemsTableName,
+        IndexName: this.props.IndexName,
+        KeyConditionExpression: '#userId = :userId',
+        ExpressionAttributeNames: {
+          '#userId': 'UserId'
+        },
+        ExpressionAttributeValues: {
+          ':userId': this.props.UserId
+        }
       }).promise();
-    } else {
+    }
+    else if (this.props.ParentId !== undefined) {
       Log.info('Fetching items by ParentId', { ParentId: this.props.ParentId, ParentIdField: this.props.ParentFieldName });
       items = await this.ddb.query({
         TableName: this.props.ItemsTableName,
@@ -225,6 +246,11 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         ExpressionAttributeValues: {
           ':parentId': this.props.ParentId
         }
+      }).promise();
+    } else {
+      Log.info('Scanning items');
+      items = await this.ddb.scan({
+        TableName: this.props.ItemsTableName
       }).promise();
     }
 
@@ -256,8 +282,9 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     delete (request as any)[idField];
     if (parentField) delete (request as any)[parentField];
 
+    (request as any).UpdatedAt = new Date().toISOString();
     const changedKeys = Object.keys(request);
-    if (!changedKeys.length) {
+    if (changedKeys.length === 1) {
       throw ItemsCrud.NO_CHANGES_EXCEPTION;
     }
 

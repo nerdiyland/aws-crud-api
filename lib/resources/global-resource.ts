@@ -123,6 +123,7 @@ export class GlobalCRUDResource extends Resource {
                 InputSchema: props.Configuration.Operations.Create!.InputModel ? props.Configuration.Operations.Create!.InputModel!.ModelName : undefined,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
+                OutputFields: (props.Configuration.Operations.Create!.Response! || {}).Fields,
                 ParentId: `$input.params('parentId')`
               },
               Data: "'$input.json('$')'"
@@ -146,7 +147,21 @@ export class GlobalCRUDResource extends Resource {
     }
 
     // List items
-    if (props.Configuration.Operations.List) {
+    if (props.Configuration.Operations.List || props.Configuration.Operations.ListOwned) {
+      const configSource = props.Configuration.Operations.List ? props.Configuration.Operations.List : props.Configuration.Operations.ListOwned;
+      const listType = configSource === props.Configuration.Operations.List ? 'global' : 'owned';
+
+      if (configSource!.IndexName) {
+        props.Configuration.BackendFunction.addToRolePolicy(new PolicyStatement({
+          actions: [
+            'dynamodb:Query',
+          ],
+          resources: [
+            `${props.Configuration.Table.tableArn}/index/${configSource?.IndexName}`
+          ]
+        }));
+      }
+
       this.listItemsMethod = new Method(this, 'ListItemsMethod', {
         httpMethod: 'GET',
         resource: this,
@@ -158,6 +173,8 @@ export class GlobalCRUDResource extends Resource {
               Params: {
                 UserId: '$context.identity.cognitoIdentityId',
                 OperationName: 'listItems',
+                ListType: listType,
+                IndexName: configSource!.IndexName,
                 EntitySchema: props.Configuration.EntitySchema,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
@@ -181,7 +198,7 @@ export class GlobalCRUDResource extends Resource {
         }),
         options: {
           authorizationType: AuthorizationType.IAM,
-          operationName: props.Configuration.Operations.List!.OperationName,
+          operationName: configSource!.OperationName,
           // FIXME
           // requestModels: {
           //   'application/json': listsRequestModel

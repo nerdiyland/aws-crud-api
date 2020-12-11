@@ -25,7 +25,10 @@ export const handler = async (event: FunctionEvent<any>) => {
     EntitySchema,
     InputSchema,
     IdFieldName,
-    ParentFieldName
+    ParentFieldName,
+    IndexName,
+    ListType,
+    OutputFields
   } = event.Params;
   
   const Data = event.Data;
@@ -34,11 +37,11 @@ export const handler = async (event: FunctionEvent<any>) => {
   let entitySchema: ExtendedJSONSchema | undefined;
   let inputSchema: ExtendedJSONSchema | undefined;
   if (EntitySchema) {
-    entitySchema = (Schemas.definitions as { [key: string]: ExtendedJSONSchema })[EntitySchema];
+    entitySchema = (Schemas.definitions as { [key: string]: any })[EntitySchema];
   }
 
   if (InputSchema) {
-    inputSchema = (Schemas.definitions as { [key: string]: ExtendedJSONSchema })[InputSchema];
+    inputSchema = (Schemas.definitions as { [key: string]: any })[InputSchema];
   }
 
   Log.info('Starting items CRUD request', { UserId, Data, OperationName });
@@ -48,14 +51,17 @@ export const handler = async (event: FunctionEvent<any>) => {
     EntitySchema: entitySchema,
     InputSchema: inputSchema,
     IdFieldName,
-    ParentFieldName
+    ParentFieldName,
+    IndexName,
+    ListType,
+    OutputFields
   });
 
   switch (OperationName) {
     case OperationType.CREATE_ITEM:
       Log.info('Processing item creation');
       const createResult = await itemsCrud.createItem(Data as CreateItemRequest);
-      return createResult;
+      return mapResponse(createResult, OutputFields);
     case OperationType.LIST_ITEMS:
       Log.info('Processing item list request');
       const listResult = await itemsCrud.listItems(Data as ListItemsRequest<any>);
@@ -71,6 +77,7 @@ export const handler = async (event: FunctionEvent<any>) => {
           throw 'ITEM_NOT_FOUND';
         }
       }
+      return;
     case OperationType.UPDATE_ITEM:
       Log.info('Updating item by id', { Id });
       const updateResult = await itemsCrud.updateItem(Id!, Data);
@@ -84,3 +91,12 @@ export const handler = async (event: FunctionEvent<any>) => {
       throw INVALID_OPERATION_EXCEPTION;
   }
 };
+
+function mapResponse(response: any, fields?: string[]) {
+  if (!fields) return response;
+
+  return Object.keys(response)
+    .filter(k => fields.indexOf(k) !== -1)
+    .map(k => ({ [k]: response[k] }))
+    .reduce((t: any, i: any) => ({ ...t, ...i }), {})
+}
