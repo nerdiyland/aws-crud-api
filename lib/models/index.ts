@@ -1,6 +1,7 @@
 import { IResource, JsonSchema, RestApi } from "@aws-cdk/aws-apigateway";
 import { AttributeType, ITable } from "@aws-cdk/aws-dynamodb";
 import { IFunction } from "@aws-cdk/aws-lambda";
+import { Duration } from "@aws-cdk/core";
 
 export interface BaseCrudApiProps {
 
@@ -61,6 +62,16 @@ export interface BaseCrudApiProps {
    * Function that will take care of the backend operations for this resource
    */
   BackendFunction?: IFunction;
+
+  /**
+   * Memory to assign backend function
+   */
+  BackendMemory?: number;
+
+  /**
+   * Backend timeout duration
+   */
+  BackendTimeout?: Duration;
 
   /**
    * Defines the operations that this API should enable consumers to use
