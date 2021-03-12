@@ -50,7 +50,6 @@ export class BaseCrudApi extends cdk.Construct {
       handler: 'index.handler',
       runtime: Runtime.NODEJS_12_X,
       description: `${props.ComponentName}/${props.ResourcePath} - Standard backend for CRUD apis`,
-      logRetention: RetentionDays.ONE_WEEK,
       memorySize: props.BackendMemory,
       timeout: props.BackendTimeout,
       environment: {
