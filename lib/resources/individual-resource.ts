@@ -97,7 +97,10 @@ export class IndividualCRUDResource extends Resource {
                 'method.response.header.access-control-allow-headers': true,
                 'method.response.header.access-control-allow-methods': true,
                 'method.response.header.access-control-allow-credentials': true
-              }
+              },
+              responseModels: props.Configuration.Operations.Read.Response && props.Configuration.Operations.Read.Response!.Model ? {
+                'application/json': props.Configuration.Operations.Read.Response!.Model
+              } : undefined,
             },
             {
               statusCode: '404',
@@ -115,17 +118,6 @@ export class IndividualCRUDResource extends Resource {
 
     // Update entity
     if (props.Configuration.Operations.Update) {
-      let inputModel: Model;
-      
-      // if (props.Configuration.Operations.Update!.InputModel) {
-      //   inputModel = new Model(this, 'UpdateMethodInputModel', {
-      //     restApi: this.api,
-      //     schema: props.Configuration.Operations.Update!.InputModel!.Schema,
-      //     contentType: 'application/json',
-      //     modelName: props.Configuration.Operations.Update!.InputModel!.ModelName
-      //   })
-      // }
-
       this.updateItemMethod = new Method(this, 'UpdateItemMethod', {
         httpMethod: 'PUT',
         resource: this,
@@ -179,8 +171,10 @@ export class IndividualCRUDResource extends Resource {
                 'method.response.header.access-control-allow-headers': true,
                 'method.response.header.access-control-allow-methods': true,
                 'method.response.header.access-control-allow-credentials': true
-              }
-              // TODO Response model
+              },
+              responseModels: props.Configuration.Operations.Update.Response && props.Configuration.Operations.Update.Response!.Model ? {
+                'application/json': props.Configuration.Operations.Update.Response!.Model
+              } : undefined,
             },
             {
               statusCode: '404',
@@ -254,7 +248,7 @@ export class IndividualCRUDResource extends Resource {
                 'method.response.header.access-control-allow-headers': true,
                 'method.response.header.access-control-allow-methods': true,
                 'method.response.header.access-control-allow-credentials': true
-              }
+              },
             },
             {
               statusCode: '404',

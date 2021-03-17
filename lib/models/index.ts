@@ -112,7 +112,7 @@ export interface BaseCrudApiOperationResponseConfiguration {
   StatusCode?: string;
   Fields?: string[];
   MatchResponse?: RegExp | string;
-  Model?: BaseCrudApiOperationModelConfiguration;
+  Model?: Model;
 }
 
 export interface BaseCrudApiOperationModelConfiguration {

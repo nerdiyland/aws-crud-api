@@ -69,9 +69,9 @@ export class GlobalCRUDResource extends Resource {
         methodResponses: [
           {
             statusCode: '200',
-            // responseModels: {
-            //   'application/json': entityPropsModel
-            // },
+            responseModels: props.Configuration.Operations.Create.Response && props.Configuration.Operations.Create.Response!.Model ? {
+              'application/json': props.Configuration.Operations.Create.Response!.Model
+            } : undefined,
             responseParameters: {
               'method.response.header.access-control-allow-origin': true,
               'method.response.header.access-control-allow-headers': true,
@@ -198,9 +198,9 @@ export class GlobalCRUDResource extends Resource {
           methodResponses: [
             {
               statusCode: '200',
-              // responseModels: {
-              //   'application/json': entityPropsModel
-              // },
+              responseModels: configSource!.Response && configSource!.Response!.Model ? {
+                'application/json': configSource!.Response!.Model
+              } : undefined,
               responseParameters: {
                 'method.response.header.access-control-allow-origin': true,
                 'method.response.header.access-control-allow-headers': true,
