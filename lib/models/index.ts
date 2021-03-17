@@ -1,4 +1,4 @@
-import { IResource, JsonSchema, RestApi } from "@aws-cdk/aws-apigateway";
+import { IResource, JsonSchema, Model, RestApi } from "@aws-cdk/aws-apigateway";
 import { AttributeType, ITable } from "@aws-cdk/aws-dynamodb";
 import { IFunction } from "@aws-cdk/aws-lambda";
 import { Duration } from "@aws-cdk/core";
@@ -103,7 +103,7 @@ export interface BaseCrudApiOperations {
 export interface BaseCrudApiOperationConfiguration {
   OperationName: string;
   IndexName?: string;
-  InputModel?: BaseCrudApiOperationModelConfiguration;
+  InputModel?: Model;
   Response?: BaseCrudApiOperationResponseConfiguration;
   BackendFunction?: IFunction;
 }

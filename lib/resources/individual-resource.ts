@@ -86,6 +86,9 @@ export class IndividualCRUDResource extends Resource {
           requestParameters: {
             'method.request.path.id': true
           },
+          requestModels: !props.Configuration.Operations.Read.InputModel ? undefined : {
+            'application/json': props.Configuration.Operations.Read.InputModel
+          },
           methodResponses: [
             {
               statusCode: '200',
@@ -165,9 +168,9 @@ export class IndividualCRUDResource extends Resource {
           requestParameters: {
             'method.request.path.id': true
           },
-          // requestModels: props.Configuration.Operations.Update!.InputModel ? {
-          //   'application/json': inputModel!
-          // } : undefined,
+          requestModels: props.Configuration.Operations.Update!.InputModel ? {
+            'application/json': props.Configuration.Operations.Update!.InputModel
+          } : undefined,
           methodResponses: [
             {
               statusCode: '200',

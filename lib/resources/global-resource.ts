@@ -82,19 +82,12 @@ export class GlobalCRUDResource extends Resource {
         ]
       };
         
-      // if (props.Configuration.Operations.Create!.InputModel) {
-      //   inputModel = new Model(this, 'CreateMethodInputModel', {
-      //     restApi: this.api,
-      //     schema: props.Configuration.Operations.Create!.InputModel!.Schema,
-      //     contentType: 'application/json',
-      //     modelName: props.Configuration.Operations.Create!.InputModel!.ModelName
-      //   })
-
-      //   // @ts-ignore
-      //   createMethodOptions.requestModels = {
-      //     'application/json': inputModel!
-      //   }
-      // }
+      if (props.Configuration.Operations.Create!.InputModel) {
+        // @ts-ignore
+        createMethodOptions.requestModels = {
+          'application/json': props.Configuration.Operations.Create!.InputModel
+        }
+      }
       
       if (props.Configuration.ParentResourceName) {
 
@@ -120,7 +113,6 @@ export class GlobalCRUDResource extends Resource {
                 UserId: '$context.identity.cognitoIdentityId',
                 OperationName: 'createItem',
                 EntitySchema: props.Configuration.EntitySchema,
-                InputSchema: props.Configuration.Operations.Create!.InputModel ? props.Configuration.Operations.Create!.InputModel!.ModelName : undefined,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
                 OutputFields: (props.Configuration.Operations.Create!.Response! || {}).Fields,
@@ -199,10 +191,9 @@ export class GlobalCRUDResource extends Resource {
         options: {
           authorizationType: AuthorizationType.IAM,
           operationName: configSource!.OperationName,
-          // FIXME
-          // requestModels: {
-          //   'application/json': listsRequestModel
-          // },
+          requestModels: !configSource!.InputModel ? undefined : {
+            'application/json': configSource!.InputModel
+          },
           requestValidator: requestValidator,
           methodResponses: [
             {
