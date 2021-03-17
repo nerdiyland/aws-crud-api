@@ -81,7 +81,7 @@ export class IndividualCRUDResource extends Resource {
         }),
         options: {
           authorizationType: AuthorizationType.IAM,
-          operationName: 'getById',
+          operationName: props.Configuration.Operations.Read.OperationName || 'getById',
           requestValidator: requestValidator,
           requestParameters: {
             'method.request.path.id': true
@@ -160,7 +160,7 @@ export class IndividualCRUDResource extends Resource {
         }),
         options: {
           authorizationType: AuthorizationType.IAM,
-          operationName: 'update',
+          operationName: props.Configuration.Operations.Update.OperationName || 'update',
           requestValidator: requestValidator,
           requestParameters: {
             'method.request.path.id': true
@@ -239,7 +239,7 @@ export class IndividualCRUDResource extends Resource {
         }),
         options: {
           authorizationType: AuthorizationType.IAM,
-          operationName: 'delete',
+          operationName: props.Configuration.Operations.Delete.OperationName || 'delete',
           requestParameters: {
             'method.request.path.id': true
           },
