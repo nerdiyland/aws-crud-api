@@ -110,7 +110,7 @@ export class GlobalCRUDResource extends Resource {
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
-                UserId: '$context.identity.cognitoIdentityId',
+                UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'createItem',
                 EntitySchema: props.Configuration.EntitySchema,
                 IdFieldName: props.Configuration.IdFieldName,
@@ -163,7 +163,7 @@ export class GlobalCRUDResource extends Resource {
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
-                UserId: '$context.identity.cognitoIdentityId',
+                UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'listItems',
                 ListType: listType,
                 IndexName: configSource!.IndexName,

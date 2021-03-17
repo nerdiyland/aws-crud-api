@@ -53,6 +53,11 @@ export interface BaseCrudApiProps {
   ParentResourceName?: string;
 
   /**
+   * Optional location where to fetch the UserId from. By default, Cognito credentials are used.
+   */
+  UserId?: string;
+
+  /**
    * Table to use for CRUD operations. If none is given, a table will be created.
    * Tables must have only HashKey set to `Id` (string).
    */

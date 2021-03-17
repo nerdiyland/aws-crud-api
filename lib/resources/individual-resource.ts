@@ -51,7 +51,7 @@ export class IndividualCRUDResource extends Resource {
               Params: {
                 [props.Configuration.IdFieldName || 'Id']: `$input.params('${props.Configuration.IdResourceName || 'id'}')`,
                 [props.Configuration.ParentFieldName!]: props.Configuration.ParentResourceName ? `$input.params('${props.Configuration.ParentResourceName}')` : undefined,
-                UserId: '$context.identity.caller',
+                UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'getItemById',
               },
             }).split('"\'').join('').split('\'"').join('')
@@ -131,7 +131,7 @@ export class IndividualCRUDResource extends Resource {
             'application/json': JSON.stringify({
               Params: {
                 Id: "$input.params('id')",
-                UserId: '$context.identity.caller',
+                UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'updateItem',
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
@@ -206,7 +206,7 @@ export class IndividualCRUDResource extends Resource {
               Params: {
                 [props.Configuration.IdFieldName || 'Id']: `$input.params('${props.Configuration.IdResourceName || 'id'}')`,
                 [props.Configuration.ParentFieldName!]: props.Configuration.ParentResourceName ? `$input.params('${props.Configuration.ParentResourceName}')` : undefined,
-                UserId: '$context.identity.caller',
+                UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'deleteItem',
               }
             }).split('"\'').join('').split('\'"').join('')
