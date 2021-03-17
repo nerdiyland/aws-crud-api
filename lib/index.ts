@@ -45,6 +45,22 @@ export class BaseCrudApi extends cdk.Construct {
       } : undefined
     });
 
+    // TODO: Add flag to limit this
+    if (!props.Table) {
+      const fullTable: Table = this.table as any;
+      fullTable.addGlobalSecondaryIndex({
+        indexName: 'ByUserId',
+        partitionKey: {
+          type: AttributeType.STRING,
+          name: 'UserId'
+        },
+        sortKey: {
+          type: AttributeType.STRING,
+          name: 'Id'
+        }
+      });
+    }
+
     this.backendFunction = props.BackendFunction || new Function(this, 'BackendFunction', {
       code: new AssetCode(`${__dirname}/../packages/standard-crud-backend`),
       handler: 'index.handler',
