@@ -1,4 +1,4 @@
-import { IResource, JsonSchema, Model, RestApi } from "@aws-cdk/aws-apigateway";
+import { IResource, JsonSchema, Model, RequestValidator, RestApi } from "@aws-cdk/aws-apigateway";
 import { AttributeType, ITable } from "@aws-cdk/aws-dynamodb";
 import { IFunction } from "@aws-cdk/aws-lambda";
 import { Duration } from "@aws-cdk/core";
@@ -87,6 +87,11 @@ export interface BaseCrudApiProps {
    * Name of the schema that this api should manage
    */
   EntitySchema?: string;
+
+  /**
+   * Optional validator for the API resource
+   */
+  Validator?: RequestValidator;
 }
   
 export interface BaseCrudApiTableConfigurationProps {

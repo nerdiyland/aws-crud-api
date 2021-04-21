@@ -29,7 +29,7 @@ export class IndividualCRUDResource extends Resource {
   constructor(scope: Construct, id: string, props: ResourceConfiguration) {
     super(scope, id, props);
 
-    const requestValidator = new RequestValidator(this, 'IndividualCrudRequestValidator', {
+    const requestValidator = props.Validator || new RequestValidator(this, 'IndividualCrudRequestValidator', {
       restApi: this.api,
       validateRequestBody: true,
       validateRequestParameters: true

@@ -12,6 +12,7 @@ export interface ExtendedConfiguration extends BaseCrudApiProps {
 
 export interface ResourceConfiguration extends ResourceProps {
   Configuration: ExtendedConfiguration;
+  Validator?: RequestValidator;
 }
 
 /**
@@ -49,7 +50,7 @@ export class GlobalCRUDResource extends Resource {
      * START Define methods
      */
 
-    const requestValidator = new RequestValidator(this, 'GlobalCrudRequestValidator', {
+    const requestValidator = props.Validator || new RequestValidator(this, 'GlobalCrudRequestValidator', {
       restApi: this.api,
       validateRequestBody: true,
       validateRequestParameters: true

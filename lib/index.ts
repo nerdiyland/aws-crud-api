@@ -99,7 +99,8 @@ export class BaseCrudApi extends cdk.Construct {
         ...props,
         BackendFunction: this.backendFunction,
         Table: this.table
-      }
+      },
+      Validator: props.Validator
     });
 
     this.individualResource = new IndividualCRUDResource(this, 'IndividualCRUDResource', {
@@ -108,7 +109,8 @@ export class BaseCrudApi extends cdk.Construct {
       Configuration: {
         ...props,
         BackendFunction: this.backendFunction,
-        Table: this.table
+        Table: this.table,
+        Validator: props.Validator
       }
     });
 
