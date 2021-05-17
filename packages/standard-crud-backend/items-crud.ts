@@ -232,8 +232,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         },
         ExpressionAttributeValues: {
           ':userId': this.props.UserId
-        },
-        Limit: 100
+        }
       }).promise();
     }
     else if (this.props.ParentId !== undefined) {
@@ -246,14 +245,12 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         },
         ExpressionAttributeValues: {
           ':parentId': this.props.ParentId
-        },
-        Limit: 100
+        }
       }).promise();
     } else {
       Log.info('Scanning items');
       items = await this.ddb.scan({
-        TableName: this.props.ItemsTableName,
-        Limit: 100
+        TableName: this.props.ItemsTableName
       }).promise();
     }
 
