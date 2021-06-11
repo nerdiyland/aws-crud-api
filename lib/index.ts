@@ -68,6 +68,7 @@ export class BaseCrudApi extends cdk.Construct {
       description: `${props.ComponentName}/${props.ResourcePath} - Standard backend for CRUD apis`,
       memorySize: props.BackendMemory,
       timeout: props.BackendTimeout,
+      logRetention: RetentionDays.ONE_MONTH,
       environment: {
         ITEMS_TABLE_NAME: this.table.tableName,
         ID_PARAM_NAME: props.IdResourceName || 'Id',
