@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 14
           registry-url: http://registry.npmjs.org/
-      - run: npm ci --ignore-scripts
+      - run: npm i --ignore-scripts
         env: 
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
       - run: ./node_modules/.bin/lerna bootstrap
