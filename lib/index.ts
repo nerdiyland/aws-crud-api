@@ -35,6 +35,7 @@ export class BaseCrudApi extends cdk.Construct {
     this.table = props.Table || new Table(this, 'Table', {
       removalPolicy: RemovalPolicy.DESTROY,
       billingMode: BillingMode.PAY_PER_REQUEST,
+      pointInTimeRecovery: true,
       partitionKey: {
         name: props.ParentResourceName ? props.ParentFieldName || 'ParentId' : props.IdFieldName || 'Id',
         type: AttributeType.STRING
