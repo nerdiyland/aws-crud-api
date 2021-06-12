@@ -26,7 +26,7 @@ jobs:
       - run: npm i @aftersignals/models@latest
         env: 
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
-      - run: lerna add @aftersignals/models@latest
+      - run: ./node_modules/.bin/lerna add @aftersignals/models@latest
         env: 
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
       - run: npm rebuild && npm run prepare --if-present
