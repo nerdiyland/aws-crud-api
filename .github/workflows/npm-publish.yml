@@ -20,6 +20,9 @@ jobs:
       - run: npm ci --ignore-scripts
         env: 
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
+      - run: ./node_modules/.bin/lerna bootstrap
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
       - run: npm rebuild && npm run prepare --if-present
       - run: npm run build
       - run: ./node_modules/.bin/lerna run build
