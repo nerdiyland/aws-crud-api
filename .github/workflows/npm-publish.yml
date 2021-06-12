@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 14
           registry-url: http://registry.npmjs.org/
-      - run: npm i --ignore-scripts
+      - run: npm ci --ignore-scripts
         env: 
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
       - run: ./node_modules/.bin/lerna bootstrap
@@ -26,7 +26,7 @@ jobs:
       - run: npm i @aftersignals/models@latest
         env: 
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
-      - run: ./node_modules/.bin/lerna add @aftersignals/models@latest
+      - run: ./node_modules/.bin/lerna exec -- npm i @aftersignals/models@latest
         env: 
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
       - run: npm rebuild && npm run prepare --if-present
