@@ -241,7 +241,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
           Key: objectKey
         }).promise();
 
-        return { [s3Key]: contents };
+        return { [s3Key]: contents.Body!.toString('utf-8') };
       }));
 
       const replacements = s3Keys.reduce((t, i) => ({ ...t, ...i }), {});
