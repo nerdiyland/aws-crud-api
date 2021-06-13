@@ -101,7 +101,8 @@ export class BaseCrudApi extends cdk.Construct {
           's3:GetObject'
         ],
         resources: [
-          props.Bucket.bucketArn
+          props.Bucket.bucketArn,
+          props.Bucket.arnForObjects('*')
         ]
       }))
     }

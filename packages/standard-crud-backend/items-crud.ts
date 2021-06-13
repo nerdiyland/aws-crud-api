@@ -232,6 +232,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     let responseItem = response.Item!;
     if (this.props.S3Fields) {
       const s3KeyNames = Object.keys(this.props.S3Fields!);
+      Log.info('Managing S3 fields', { fields: s3KeyNames });
 
       const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
         const objectKey = responseItem[s3Key];
@@ -332,6 +333,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     let finalRequest: any = request;
     if (this.props.S3Fields) {
       const s3KeyNames = Object.keys(this.props.S3Fields!);
+      Log.info('Managing S3 fields', { fields: s3KeyNames });
 
       const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
         const s3KeyValue = this.props.S3Fields![s3Key];
