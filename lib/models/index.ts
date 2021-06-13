@@ -67,7 +67,7 @@ export interface BaseCrudApiProps {
   /**
    * Bucket to store large data
    */
-  Bucket: IBucket;
+  Bucket?: IBucket;
 
   /**
    * Function that will take care of the backend operations for this resource
