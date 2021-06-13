@@ -72,6 +72,7 @@ export class BaseCrudApi extends cdk.Construct {
       logRetention: RetentionDays.ONE_MONTH,
       environment: {
         ITEMS_TABLE_NAME: this.table.tableName,
+        ITEMS_BUCKET_NAME: props.Bucket ? props.Bucket.bucketName : '',
         ID_PARAM_NAME: props.IdResourceName || 'Id',
         PARENT_PARAM_NAME: props.ParentResourceName ? props.ParentFieldName || 'ParentId' : 'no'
       }
@@ -90,6 +91,19 @@ export class BaseCrudApi extends cdk.Construct {
           this.table.tableArn
         ]
       }));
+    }
+
+    // Grant function access to bucket
+    if (props.Bucket) {
+      this.backendFunction.addToRolePolicy(new PolicyStatement({
+        actions: [
+          's3:PutObject',
+          's3:GetObject'
+        ],
+        resources: [
+          props.Bucket.bucketArn
+        ]
+      }))
     }
 
     // API resources

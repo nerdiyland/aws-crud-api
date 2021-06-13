@@ -52,6 +52,7 @@ export class IndividualCRUDResource extends Resource {
                 [props.Configuration.IdFieldName || 'Id']: `$input.params('${props.Configuration.IdResourceName || 'id'}')`,
                 [props.Configuration.ParentFieldName!]: props.Configuration.ParentResourceName ? `$input.params('${props.Configuration.ParentResourceName}')` : undefined,
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
+                S3Fields: props.Configuration.S3Fields,
                 OperationName: 'getItemById',
               },
             }).split('"\'').join('').split('\'"').join('')
@@ -135,6 +136,7 @@ export class IndividualCRUDResource extends Resource {
                 OperationName: 'updateItem',
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
+                S3Fields: props.Configuration.S3Fields,
               },
               Data: "'$input.json('$')'"
             }).split('"\'').join('').split('\'"').join('')

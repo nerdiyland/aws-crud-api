@@ -28,8 +28,9 @@ export const handler = async (event: FunctionEvent<any>) => {
     ParentFieldName,
     IndexName,
     ListType,
-    OutputFields
-  } = event.Params;
+    OutputFields,
+    S3Fields
+  } = event.Params as any;
   
   const Data = event.Data;
   Log.debug('Event object', { event })
@@ -48,13 +49,15 @@ export const handler = async (event: FunctionEvent<any>) => {
   const itemsCrud = new ItemsCrud({
     UserId,
     ItemsTableName: process.env.ITEMS_TABLE_NAME!,
+    ItemsBucketName: process.env.ITEMS_BUCKET_NAME!,
     EntitySchema: entitySchema,
     InputSchema: inputSchema,
     IdFieldName,
     ParentFieldName,
     IndexName,
     ListType,
-    OutputFields
+    OutputFields,
+    S3Fields
   });
 
   switch (OperationName) {

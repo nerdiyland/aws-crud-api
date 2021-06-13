@@ -1,4 +1,5 @@
 import { DocumentClient, QueryOutput, ScanOutput } from 'aws-sdk/clients/dynamodb';
+import S3 from 'aws-sdk/clients/s3';
 import { v4 as uuid } from 'uuid';
 import moment from 'moment';
 import { StandaloneObject } from '@aftersignals/models/base/StandaloneObject';
@@ -9,6 +10,7 @@ import { ExtendedJSONSchema } from '@aftersignals/models/base/ExtendedSchema'
 import { Scaffold } from '@aftersignals/models/util/scaffold';
 import Log from '@dazn/lambda-powertools-logger';
 import Schemas from '@aftersignals/models/schema.extended.json';
+import path from 'path';
 
 /**
  * Configures the Items CRUD service
@@ -24,6 +26,11 @@ export interface ItemsCrudProps {
    * Name of the DynamoDB table where the items are stored.
    */
   ItemsTableName: string;
+
+  /**
+   * Name of the S3 bucket that handles large data
+   */
+  ItemsBucketName?: string;
 
   /**
    * Optionally, provide the documentClient instance to use
@@ -71,6 +78,8 @@ export interface ItemsCrudProps {
   ListType?: 'global' | 'owned';
 
   OutputFields?: string[];
+
+  S3Fields?: { [key: string]: any },
 }
 
 /**
@@ -128,6 +137,11 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
    * Accessor for DynamoDB
    */
   private readonly ddb: DocumentClient;
+
+  /**
+   * Accessor for S3
+   */
+  private readonly s3: S3;
   
   constructor(props: ItemsCrudProps) {
     if (!props) {
@@ -146,6 +160,10 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     this.ddb = props.DocumentClient || new DocumentClient({
       region: props.AwsRegion || process.env.AWS_REGION
     });
+
+    this.s3 = new S3({
+      region: props.AwsRegion || process.env.AWS_REGION
+    })
   }
   
   /**
@@ -210,7 +228,29 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       throw ItemsCrud.ITEM_NOT_FOUND_EXCEPTION;
     }
 
-    return response.Item! as R;
+    // Manage S3 Fields
+    let responseItem = response.Item!;
+    if (this.props.S3Fields) {
+      const s3KeyNames = Object.keys(this.props.S3Fields!);
+
+      const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
+        const objectKey = responseItem[s3Key];
+        const contents = await this.s3.getObject({
+          Bucket: this.props.ItemsBucketName!,
+          Key: objectKey
+        }).promise();
+
+        return { [s3Key]: contents };
+      }));
+
+      const replacements = s3Keys.reduce((t, i) => ({ ...t, ...i }), {});
+      responseItem = {
+        ...responseItem,
+        ...replacements
+      }
+    }
+
+    return responseItem as R;
   }
 
   /**
@@ -288,10 +328,34 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       throw ItemsCrud.NO_CHANGES_EXCEPTION;
     }
 
-    const validProperties: string[] = [] // TODO
-    // if (changedKeys.filter(k => validProperties.indexOf(k) === -1).length) {
-    //   throw ItemsCrud.INVALID_REQUEST_OBJECT;
-    // }
+    // Manage S3 Fields
+    let finalRequest: any = request;
+    if (this.props.S3Fields) {
+      const s3KeyNames = Object.keys(this.props.S3Fields!);
+
+      const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
+        const s3KeyValue = this.props.S3Fields![s3Key];
+        const key = path.join(`${s3KeyValue.Prefix || ''}`, this.props.UserId, itemId, `${s3Key}`);
+        const contents = (request as any)[s3Key];
+        const strContents = typeof(contents) === 'object' ? JSON.stringify(contents) : contents;
+
+        const s3Response = await this.s3.putObject({
+          Bucket: this.props.ItemsBucketName!,
+          Key: key,
+          Body: strContents,
+          // ServerSideEncryption: 'aws:kms',
+          // TODO Configure encryption and more
+        }).promise();
+
+        return { [s3Key]: key }
+      }));
+
+      const objectReplacement = s3Keys.reduce((t, i) => ({ ...t, ...i }), {});
+      finalRequest = {
+        ...finalRequest,
+        ...objectReplacement
+      }
+    }
 
     const requestObject: DocumentClient.UpdateItemInput = {
       TableName: this.props.ItemsTableName,
@@ -301,7 +365,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       },
       UpdateExpression: `set ${changedKeys.map(k => `#${k} = :${k}`).join(', ')}`.trim(),
       ExpressionAttributeNames: changedKeys.map(k => ({ [`#${k}`]: k })).reduce((t: any, i: any) => ({ ...t, ...i }), {}),
-      ExpressionAttributeValues: changedKeys.map(k => ({ [`:${k}`]: (request as any)[k] })).reduce((t: any, i: any) => ({ ...t, ...i }), {})
+      ExpressionAttributeValues: changedKeys.map(k => ({ [`:${k}`]: finalRequest[k] })).reduce((t: any, i: any) => ({ ...t, ...i }), {})
     }
 
     await this.ddb.update(requestObject).promise();

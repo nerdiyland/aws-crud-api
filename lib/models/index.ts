@@ -1,3 +1,4 @@
+import { IBucket } from '@aws-cdk/aws-s3';
 import { IResource, JsonSchema, Model, RequestValidator, RestApi } from "@aws-cdk/aws-apigateway";
 import { AttributeType, ITable } from "@aws-cdk/aws-dynamodb";
 import { IFunction } from "@aws-cdk/aws-lambda";
@@ -64,6 +65,11 @@ export interface BaseCrudApiProps {
   Table?: ITable;
 
   /**
+   * Bucket to store large data
+   */
+  Bucket: IBucket;
+
+  /**
    * Function that will take care of the backend operations for this resource
    */
   BackendFunction?: IFunction;
@@ -92,6 +98,12 @@ export interface BaseCrudApiProps {
    * Optional validator for the API resource
    */
   Validator?: RequestValidator;
+
+  /**
+   * Determines which fields of the resource's model shall be stored and retrieved from S3
+   * This is useful when APIs handle a resource that stores large data as part of the contract
+   */
+  S3Fields?: { [key: string]: BaseCrudApiOperationS3FieldConfiguration }
 }
   
 export interface BaseCrudApiTableConfigurationProps {
@@ -118,6 +130,10 @@ export interface BaseCrudApiOperationConfiguration {
   BackendFunction?: IFunction;
 }
 
+export interface BaseCrudApiOperationS3FieldConfiguration {
+  Prefix?: string;
+  // TODO Add other properties
+}
 export interface BaseCrudApiOperationResponseConfiguration {
   StatusCode?: string;
   Fields?: string[];
