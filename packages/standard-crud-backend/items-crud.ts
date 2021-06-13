@@ -235,13 +235,23 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       Log.info('Managing S3 fields', { fields: s3KeyNames });
 
       const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
+        const s3KeyValue = this.props.S3Fields![s3Key];
         const objectKey = responseItem[s3Key];
         const contents = await this.s3.getObject({
           Bucket: this.props.ItemsBucketName!,
           Key: objectKey
         }).promise();
 
-        return { [s3Key]: contents.Body!.toString('utf-8') };
+        let parsedContents = contents.Body!.toString('utf-8');
+        switch (s3KeyValue.DataFormat) {
+          case 'json':
+          case undefined:
+          default:
+            parsedContents = JSON.parse(parsedContents);
+            break;
+          // TODO Allow for other data rather than just JSON
+        }
+        return { [s3Key]: parsedContents };
       }));
 
       const replacements = s3Keys.reduce((t, i) => ({ ...t, ...i }), {});

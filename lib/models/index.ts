@@ -132,6 +132,7 @@ export interface BaseCrudApiOperationConfiguration {
 
 export interface BaseCrudApiOperationS3FieldConfiguration {
   Prefix?: string;
+  DataFormat?: 'json' | 'TODO'; // TODO Add types
   // TODO Add other properties
 }
 export interface BaseCrudApiOperationResponseConfiguration {
