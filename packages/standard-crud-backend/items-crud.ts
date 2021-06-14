@@ -411,16 +411,24 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       }
     }
 
+    const Key = {
+      Id: itemId
+    }
+
+    if (parentField) {
+      (Key as any)[parentField] = parent;
+    }
+
     const requestObject: DocumentClient.UpdateItemInput = {
       TableName: this.props.ItemsTableName,
-      Key: {
-        Id: itemId,
-        [parentField || 'parent']: parent
-      },
+      Key,
       UpdateExpression: `set ${changedKeys.map(k => `#${k} = :${k}`).join(', ')}`.trim(),
       ExpressionAttributeNames: changedKeys.map(k => ({ [`#${k}`]: k })).reduce((t: any, i: any) => ({ ...t, ...i }), {}),
       ExpressionAttributeValues: changedKeys.map(k => ({ [`:${k}`]: finalRequest[k] })).reduce((t: any, i: any) => ({ ...t, ...i }), {})
     }
+
+    Log.info('Updating object', { Key, UpdateExpression: requestObject.UpdateExpression });
+
 
     await this.ddb.update(requestObject).promise();
 
