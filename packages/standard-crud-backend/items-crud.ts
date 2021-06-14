@@ -183,9 +183,43 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     });
     const Item: C = scaffold.data;
 
+    // Manage S3 Fields
+    let finalRequest: any = Item;
+    if (this.props.S3Fields) {
+      const s3KeyNames = Object.keys(this.props.S3Fields!);
+      Log.info('Managing S3 fields', { fields: s3KeyNames });
+
+      const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
+        const s3KeyValue = this.props.S3Fields![s3Key];
+        const key = path.join(`${s3KeyValue.Prefix || ''}`, this.props.UserId, (Item as any)[this.props.IdFieldName || 'Id']!, `${s3Key}`);
+        const contents = (request as any)[s3Key];
+        if (contents !== undefined) {
+          const strContents = typeof(contents) === 'object' ? JSON.stringify(contents) : contents;
+
+          const s3Response = await this.s3.putObject({
+            Bucket: this.props.ItemsBucketName!,
+            Key: key,
+            Body: strContents,
+            // ServerSideEncryption: 'aws:kms',
+            // TODO Configure encryption and more
+          }).promise();
+
+          return { [s3Key]: key }
+        }
+        
+        return {};
+      }));
+
+      const objectReplacement = s3Keys.reduce((t, i) => ({ ...t, ...i }), {});
+      finalRequest = {
+        ...finalRequest,
+        ...objectReplacement
+      }
+    }
+
     await this.ddb.put({
       TableName: this.props.ItemsTableName,
-      Item
+      Item: finalRequest
     }).promise();
 
     return Item;
