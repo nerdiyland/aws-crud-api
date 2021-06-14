@@ -365,6 +365,10 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     let parent = parentField ? (request as any)[parentField] : undefined;
     
     delete (request as any)[idField];
+
+    // Delete DeletedAt
+    delete (request as any).DeletedAt;
+
     if (parentField) delete (request as any)[parentField];
 
     (request as any).UpdatedAt = new Date().toISOString();
@@ -372,6 +376,10 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     if (changedKeys.length === 1) {
       throw ItemsCrud.NO_CHANGES_EXCEPTION;
     }
+
+    // Update updated date
+    // TODO Do this better
+    (request as any).UpdatedAt = new Date().toISOString();
 
     // Manage S3 Fields
     let finalRequest: any = request;
