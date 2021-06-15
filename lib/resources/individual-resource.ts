@@ -35,6 +35,20 @@ export class IndividualCRUDResource extends Resource {
       validateRequestParameters: true
     });
 
+    const integrationResponseParameters = {
+      'method.response.header.access-control-allow-origin': `'*'`,
+      'method.response.header.access-control-allow-headers': `'*'`,
+      'method.response.header.access-control-allow-methods': `'*'`,
+      'method.response.header.access-control-allow-credentials': `'true'`,
+    }
+
+    const methodResponseParameters = {
+      'method.response.header.access-control-allow-origin': true,
+      'method.response.header.access-control-allow-headers': true,
+      'method.response.header.access-control-allow-methods': true,
+      'method.response.header.access-control-allow-credentials': true
+    }
+
     // Get entity by Id
     if (props.Configuration.Operations.Read) {
       this.getItemByIdMethod = new Method(this, 'GetItemByIdMethod', {
@@ -60,22 +74,27 @@ export class IndividualCRUDResource extends Resource {
           integrationResponses: [
             {
               statusCode: '200',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': `'*'`,
-                'method.response.header.access-control-allow-headers': `'*'`,
-                'method.response.header.access-control-allow-methods': `'*'`,
-                'method.response.header.access-control-allow-credentials': `'true'`,
-              }
+              responseParameters: integrationResponseParameters
             },
             {
               statusCode: '404',
-              selectionPattern: 'ENTITY_NOT_FOUND',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': `'*'`,
-                'method.response.header.access-control-allow-headers': `'*'`,
-                'method.response.header.access-control-allow-methods': `'*'`,
-                'method.response.header.access-control-allow-credentials': `'true'`,
-              }
+              selectionPattern: 'Item not found',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '400',
+              selectionPattern: 'Bad request',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '403',
+              selectionPattern: 'Unauthorized',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '500',
+              selectionPattern: '(Internal server error|Error:)',
+              responseParameters: integrationResponseParameters
             }
           ],
           passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
@@ -93,24 +112,26 @@ export class IndividualCRUDResource extends Resource {
           methodResponses: [
             {
               statusCode: '200',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': true,
-                'method.response.header.access-control-allow-headers': true,
-                'method.response.header.access-control-allow-methods': true,
-                'method.response.header.access-control-allow-credentials': true
-              },
+              responseParameters: methodResponseParameters,
               responseModels: props.Configuration.Operations.Read.Response && props.Configuration.Operations.Read.Response!.Model ? {
                 'application/json': props.Configuration.Operations.Read.Response!.Model
               } : undefined,
             },
             {
+              statusCode: '400',
+              responseParameters: methodResponseParameters
+            },
+            {
+              statusCode: '403',
+              responseParameters: methodResponseParameters
+            },
+            {
               statusCode: '404',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': true,
-                'method.response.header.access-control-allow-headers': true,
-                'method.response.header.access-control-allow-methods': true,
-                'method.response.header.access-control-allow-credentials': true
-              }
+              responseParameters: methodResponseParameters
+            },
+            {
+              statusCode: '500',
+              responseParameters: methodResponseParameters
             }
           ]
         }
@@ -144,14 +165,28 @@ export class IndividualCRUDResource extends Resource {
           integrationResponses: [
             {
               statusCode: '200',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': `'*'`,
-                'method.response.header.access-control-allow-headers': `'*'`,
-                'method.response.header.access-control-allow-methods': `'*'`,
-                'method.response.header.access-control-allow-credentials': `'true'`,
-              }
+              responseParameters: integrationResponseParameters
             },
-            
+            {
+              statusCode: '404',
+              selectionPattern: 'Item not found',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '400',
+              selectionPattern: 'Bad request',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '403',
+              selectionPattern: 'Unauthorized',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '500',
+              selectionPattern: '(Internal server error|Error:)',
+              responseParameters: integrationResponseParameters
+            }
           ],
           passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
         }),
@@ -168,24 +203,26 @@ export class IndividualCRUDResource extends Resource {
           methodResponses: [
             {
               statusCode: '200',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': true,
-                'method.response.header.access-control-allow-headers': true,
-                'method.response.header.access-control-allow-methods': true,
-                'method.response.header.access-control-allow-credentials': true
-              },
+              responseParameters: methodResponseParameters,
               responseModels: props.Configuration.Operations.Update.Response && props.Configuration.Operations.Update.Response!.Model ? {
                 'application/json': props.Configuration.Operations.Update.Response!.Model
               } : undefined,
             },
             {
+              statusCode: '400',
+              responseParameters: methodResponseParameters
+            },
+            {
+              statusCode: '403',
+              responseParameters: methodResponseParameters
+            },
+            {
               statusCode: '404',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': true,
-                'method.response.header.access-control-allow-headers': true,
-                'method.response.header.access-control-allow-methods': true,
-                'method.response.header.access-control-allow-credentials': true
-              }
+              responseParameters: methodResponseParameters
+            },
+            {
+              statusCode: '500',
+              responseParameters: methodResponseParameters
             }
           ]
         }
@@ -215,23 +252,28 @@ export class IndividualCRUDResource extends Resource {
           },
           integrationResponses: [
             {
-              statusCode: '200',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': `'*'`,
-                'method.response.header.access-control-allow-headers': `'*'`,
-                'method.response.header.access-control-allow-methods': `'*'`,
-                'method.response.header.access-control-allow-credentials': `'true'`,
-              }
+              statusCode: '204',
+              responseParameters: integrationResponseParameters
             },
             {
               statusCode: '404',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': `'*'`,
-                'method.response.header.access-control-allow-headers': `'*'`,
-                'method.response.header.access-control-allow-methods': `'*'`,
-                'method.response.header.access-control-allow-credentials': `'true'`,
-              },
-              selectionPattern: 'ENTITY_NOT_FOUND'
+              selectionPattern: 'Item not found',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '400',
+              selectionPattern: 'Bad request',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '403',
+              selectionPattern: 'Unauthorized',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '500',
+              selectionPattern: '(Internal server error|Error:)',
+              responseParameters: integrationResponseParameters
             }
           ],
           passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
@@ -244,22 +286,24 @@ export class IndividualCRUDResource extends Resource {
           },
           methodResponses: [
             {
-              statusCode: '200',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': true,
-                'method.response.header.access-control-allow-headers': true,
-                'method.response.header.access-control-allow-methods': true,
-                'method.response.header.access-control-allow-credentials': true
-              },
+              statusCode: '204',
+              responseParameters: methodResponseParameters,
+            },
+            {
+              statusCode: '400',
+              responseParameters: methodResponseParameters
+            },
+            {
+              statusCode: '403',
+              responseParameters: methodResponseParameters
             },
             {
               statusCode: '404',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': true,
-                'method.response.header.access-control-allow-headers': true,
-                'method.response.header.access-control-allow-methods': true,
-                'method.response.header.access-control-allow-credentials': true
-              }
+              responseParameters: methodResponseParameters
+            },
+            {
+              statusCode: '500',
+              responseParameters: methodResponseParameters
             }
           ]
         }

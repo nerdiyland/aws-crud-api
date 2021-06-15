@@ -60,38 +60,52 @@ export const handler = async (event: FunctionEvent<any>) => {
     S3Fields
   });
 
-  switch (OperationName) {
-    case OperationType.CREATE_ITEM:
-      Log.info('Processing item creation');
-      const createResult = await itemsCrud.createItem(Data as CreateItemRequest);
-      return mapResponse(createResult, OutputFields);
-    case OperationType.LIST_ITEMS:
-      Log.info('Processing item list request');
-      const listResult = await itemsCrud.listItems(Data as ListItemsRequest<any>);
-      return listResult;
-    case OperationType.GET_ITEM:
-      Log.info('Reading item by id', { Id });
-      try {
+  try {
+    switch (OperationName) {
+      case OperationType.CREATE_ITEM:
+        Log.info('Processing item creation');
+        const createResult = await itemsCrud.createItem(Data as CreateItemRequest);
+        return mapResponse(createResult, OutputFields);
+      case OperationType.LIST_ITEMS:
+        Log.info('Processing item list request');
+        const listResult = await itemsCrud.listItems(Data as ListItemsRequest<any>);
+        return listResult;
+      case OperationType.GET_ITEM:
+        Log.info('Reading item by id', { Id });
         const getResult = await itemsCrud.getItemById(Id!);
         return getResult;
-      } catch (e) {
-        if (e === ItemsCrud.ITEM_NOT_FOUND_EXCEPTION) {
-          Log.error('The requested item was not found', { Id });
-          throw 'ITEM_NOT_FOUND';
-        }
-      }
-      return;
-    case OperationType.UPDATE_ITEM:
-      Log.info('Updating item by id', { Id });
-      const updateResult = await itemsCrud.updateItem(Id!, Data);
-      return updateResult;
-    case OperationType.DELETE_ITEM:
-      Log.info('Deleting item by id', { Id });
-      await itemsCrud.deleteItem(Id!);
-      return;
-    default:
-      Log.error('Unknown operation requested', { OperationName });
-      throw INVALID_OPERATION_EXCEPTION;
+      case OperationType.UPDATE_ITEM:
+        Log.info('Updating item by id', { Id });
+        const updateResult = await itemsCrud.updateItem(Id!, Data);
+        return updateResult;
+      case OperationType.DELETE_ITEM:
+        Log.info('Deleting item by id', { Id });
+        await itemsCrud.deleteItem(Id!);
+        return;
+      default:
+        Log.error('Unknown operation requested', { OperationName });
+        throw INVALID_OPERATION_EXCEPTION;
+    }
+  } catch (e) {
+    if (e === ItemsCrud.ITEM_NOT_FOUND_EXCEPTION) {
+      Log.error('The requested item was not found', { Id });
+      throw new Error('Item not found');
+    }
+
+    const statusCode = e.statusCode;
+    switch (statusCode) {
+      case 400:
+        throw new Error('Bad request');
+      case 401:
+      case 403:
+        throw new Error('Unauthorized');
+      case 404:
+        throw new Error('Item not found');
+      // TODO Other 4XX errors
+      default:
+        throw new Error('Internal server error');
+    }
+
   }
 };
 

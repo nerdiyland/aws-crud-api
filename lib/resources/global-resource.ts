@@ -56,6 +56,20 @@ export class GlobalCRUDResource extends Resource {
       validateRequestParameters: true
     });
 
+    const integrationResponseParameters = {
+      'method.response.header.access-control-allow-origin': `'*'`,
+      'method.response.header.access-control-allow-headers': `'*'`,
+      'method.response.header.access-control-allow-methods': `'*'`,
+      'method.response.header.access-control-allow-credentials': `'true'`,
+    }
+
+    const methodResponseParameters = {
+      'method.response.header.access-control-allow-origin': true,
+      'method.response.header.access-control-allow-headers': true,
+      'method.response.header.access-control-allow-methods': true,
+      'method.response.header.access-control-allow-credentials': true
+    }
+
     // TODO Define models
     
     // Create item
@@ -69,16 +83,23 @@ export class GlobalCRUDResource extends Resource {
         requestValidator: requestValidator,
         methodResponses: [
           {
-            statusCode: '200',
+            statusCode: '201',
             responseModels: props.Configuration.Operations.Create.Response && props.Configuration.Operations.Create.Response!.Model ? {
               'application/json': props.Configuration.Operations.Create.Response!.Model
             } : undefined,
-            responseParameters: {
-              'method.response.header.access-control-allow-origin': true,
-              'method.response.header.access-control-allow-headers': true,
-              'method.response.header.access-control-allow-methods': true,
-              'method.response.header.access-control-allow-credentials': true
-            }
+            responseParameters: methodResponseParameters
+          },
+          {
+            statusCode: '400',
+            responseParameters: methodResponseParameters
+          },
+          {
+            statusCode: '403',
+            responseParameters: methodResponseParameters
+          },
+          {
+            statusCode: '500',
+            responseParameters: methodResponseParameters
           }
         ]
       };
@@ -124,13 +145,23 @@ export class GlobalCRUDResource extends Resource {
           },
           integrationResponses: [
             {
-              statusCode: '200',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': `'*'`,
-                'method.response.header.access-control-allow-headers': `'*'`,
-                'method.response.header.access-control-allow-methods': `'*'`,
-                'method.response.header.access-control-allow-credentials': `'true'`,
-              }
+              statusCode: '201',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '400',
+              selectionPattern: 'Bad request',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '403',
+              selectionPattern: 'Unauthorized',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '500',
+              selectionPattern: '(Internal server error|Error:)',
+              responseParameters: integrationResponseParameters
             }
           ],
           passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
@@ -179,12 +210,22 @@ export class GlobalCRUDResource extends Resource {
           integrationResponses: [
             {
               statusCode: '200',
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': `'*'`,
-                'method.response.header.access-control-allow-headers': `'*'`,
-                'method.response.header.access-control-allow-methods': `'*'`,
-                'method.response.header.access-control-allow-credentials': `'true'`,
-              }
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '400',
+              selectionPattern: 'Bad request',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '403',
+              selectionPattern: 'Unauthorized',
+              responseParameters: integrationResponseParameters
+            },
+            {
+              statusCode: '500',
+              selectionPattern: '(Internal server error|Error:)',
+              responseParameters: integrationResponseParameters
             }
           ],
           passthroughBehavior: PassthroughBehavior.WHEN_NO_TEMPLATES
@@ -202,12 +243,19 @@ export class GlobalCRUDResource extends Resource {
               responseModels: configSource!.Response && configSource!.Response!.Model ? {
                 'application/json': configSource!.Response!.Model
               } : undefined,
-              responseParameters: {
-                'method.response.header.access-control-allow-origin': true,
-                'method.response.header.access-control-allow-headers': true,
-                'method.response.header.access-control-allow-methods': true,
-                'method.response.header.access-control-allow-credentials': true
-              }
+              responseParameters: methodResponseParameters
+            },
+            {
+              statusCode: '400',
+              responseParameters: methodResponseParameters
+            },
+            {
+              statusCode: '403',
+              responseParameters: methodResponseParameters
+            },
+            {
+              statusCode: '500',
+              responseParameters: methodResponseParameters
             }
           ]
         }

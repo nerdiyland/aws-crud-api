@@ -253,8 +253,9 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     const idField = this.props.IdFieldName || 'Id';
     const parentField = this.props.ParentFieldName;
 
-    const Key = {}
+    const Key = {};
 
+    
     if (parentField) {
       (Key as any)[parentField] = parentId;
     }
