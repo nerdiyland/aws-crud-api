@@ -9,4 +9,6 @@ cdk.out
 
 # Parcel default cache directory
 .parcel-cache
-dist!commitlint.config.js
+dist
+
+!commitlint.config.js
