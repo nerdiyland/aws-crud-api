@@ -261,11 +261,11 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     (Key as any)[idField] = itemId;
 
+    Log.info('Getting element by Id', { Key, TableName: this.props.ItemsTableName });
+
     const response = await this.ddb.get({
       TableName: this.props.ItemsTableName,
-      Key: {
-        Id: itemId
-      }
+      Key
     }).promise();
 
     if (!response.Item) {
