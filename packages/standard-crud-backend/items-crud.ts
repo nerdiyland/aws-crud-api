@@ -246,10 +246,20 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
    * Retrieves the item identified by the provided ID.
    * @param itemId Id of the item
    */
-  async getItemById (itemId: string): Promise<R> {
+  async getItemById (itemId: string, parentId?: string): Promise<R> {
     if (!itemId) {
       throw ItemsCrud.INVALID_ITEM_ID_EXCEPTION;
     }
+    const idField = this.props.IdFieldName || 'Id';
+    const parentField = this.props.ParentFieldName;
+
+    const Key = {}
+
+    if (parentField) {
+      (Key as any)[parentField] = parentId;
+    }
+
+    (Key as any)[idField] = itemId;
 
     const response = await this.ddb.get({
       TableName: this.props.ItemsTableName,
@@ -435,9 +445,8 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       TableName: this.props.ItemsTableName
     });
 
-
     await this.ddb.update(requestObject).promise();
 
-    return await this.getItemById(itemId);
+    return await this.getItemById(itemId, parent);
   }
 }
