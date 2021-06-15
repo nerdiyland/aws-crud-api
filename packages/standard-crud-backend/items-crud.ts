@@ -366,8 +366,10 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     
     delete (request as any)[idField];
 
-    // Delete DeletedAt
+    // Delete CreatedAt, DeletedAt && UserId
+    delete (request as any).CreatedAt;
     delete (request as any).DeletedAt;
+    delete (request as any).UserId;
 
     if (parentField) delete (request as any)[parentField];
 
