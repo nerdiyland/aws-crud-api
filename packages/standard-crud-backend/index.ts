@@ -72,18 +72,20 @@ export const handler = async (event: FunctionEvent<any>) => {
         Log.info('Processing item creation');
         const createResult = await itemsCrud.createItem(Data as CreateItemRequest);
         if (SuccessEvent) {
+          Log.info('Operation is configured to submit an event', { EventTopic: SuccessEvent });
+          
           const iotData = new IotData({
             endpoint: IotEndpointAddress
           });
 
           await iotData.publish({
             topic: join(`AfterSignals/events`, UserId, SuccessEvent),
-            payload: {
+            payload: JSON.stringify({
               Id: createResult.Id,
               UserId,
               EventId: uuid(),
               EventDate: new Date().toISOString(),
-            }
+            })
           }).promise();
         }
         return mapResponse(createResult, OutputFields);
