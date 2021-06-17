@@ -7,7 +7,7 @@ import { ListItemsRequest } from '@aftersignals/models/apis/base/contracts/ListI
 import { ExtendedJSONSchema } from '@aftersignals/models/base/ExtendedSchema';
 import Schemas from '@aftersignals/models/schema.extended.json'
 import { v4 as uuid } from 'uuid';
-import { join } from 'path/posix';
+import { join } from 'path';
 
 export enum OperationType {
   CREATE_ITEM = 'createItem',
