@@ -192,7 +192,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
         const s3KeyValue = this.props.S3Fields![s3Key];
         const key = path.join(`${s3KeyValue.Prefix || ''}`, this.props.UserId, (Item as any)[this.props.IdFieldName || 'Id']!, `${s3Key}`);
-        const contents = (request as any)[s3Key];
+        const contents = (finalRequest as any)[s3Key];
         if (contents !== undefined) {
           const strContents = typeof(contents) === 'object' ? JSON.stringify(contents) : contents;
 
@@ -278,30 +278,34 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       const s3KeyNames = Object.keys(this.props.S3Fields!);
       Log.info('Managing S3 fields', { fields: s3KeyNames });
 
-      const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
-        const s3KeyValue = this.props.S3Fields![s3Key];
-        const objectKey = responseItem[s3Key];
-        const contents = await this.s3.getObject({
-          Bucket: this.props.ItemsBucketName!,
-          Key: objectKey
-        }).promise();
+      try {
+        const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
+          const s3KeyValue = this.props.S3Fields![s3Key];
+          const objectKey = responseItem[s3Key];
+          const contents = await this.s3.getObject({
+            Bucket: this.props.ItemsBucketName!,
+            Key: objectKey
+          }).promise();
 
-        let parsedContents = contents.Body!.toString('utf-8');
-        switch (s3KeyValue.DataFormat) {
-          case 'json':
-          case undefined:
-          default:
-            parsedContents = JSON.parse(parsedContents);
-            break;
-          // TODO Allow for other data rather than just JSON
+          let parsedContents = contents.Body!.toString('utf-8');
+          switch (s3KeyValue.DataFormat) {
+            case 'json':
+            case undefined:
+            default:
+              parsedContents = JSON.parse(parsedContents);
+              break;
+            // TODO Allow for other data rather than just JSON
+          }
+          return { [s3Key]: parsedContents };
+        }));
+
+        const replacements = s3Keys.reduce((t, i) => ({ ...t, ...i }), {});
+        responseItem = {
+          ...responseItem,
+          ...replacements
         }
-        return { [s3Key]: parsedContents };
-      }));
-
-      const replacements = s3Keys.reduce((t, i) => ({ ...t, ...i }), {});
-      responseItem = {
-        ...responseItem,
-        ...replacements
+      } catch (e) {
+        // TODO DElete this shit
       }
     }
 
