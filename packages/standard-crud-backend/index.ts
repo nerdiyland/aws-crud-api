@@ -108,6 +108,8 @@ export const handler = async (event: FunctionEvent<any>) => {
         throw INVALID_OPERATION_EXCEPTION;
     }
   } catch (e) {
+    Log.error(e);
+
     if (e === ItemsCrud.ITEM_NOT_FOUND_EXCEPTION) {
       Log.error('The requested item was not found', { Id });
       throw new Error('Item not found');
