@@ -4,7 +4,7 @@ import { AttributeType, BillingMode, ITable, Table } from '@aws-cdk/aws-dynamodb
 import { PolicyStatement, ServicePrincipal } from '@aws-cdk/aws-iam';
 import { AssetCode, Function, IFunction, Runtime } from '@aws-cdk/aws-lambda';
 import * as cdk from '@aws-cdk/core';
-import { Aws, CfnOutput, RemovalPolicy } from '@aws-cdk/core';
+import { Aws, CfnOutput, Fn, RemovalPolicy } from '@aws-cdk/core';
 import { BaseCrudApiProps } from './models';
 import { GlobalCRUDResource } from './resources/global-resource';
 import { IndividualCRUDResource } from './resources/individual-resource';
@@ -20,6 +20,8 @@ export class BaseCrudApi extends cdk.Construct {
 
   constructor(scope: cdk.Construct, id: string, props: BaseCrudApiProps) {
     super(scope, id);
+
+    const IotEndpointAddress = Fn.importValue('AfterSignals::Core::IotEndpointAddress');
 
     // Initialise the API
     this.api = props.Api || new RestApi(this, 'RestApi', {
@@ -74,7 +76,8 @@ export class BaseCrudApi extends cdk.Construct {
         ITEMS_TABLE_NAME: this.table.tableName,
         ITEMS_BUCKET_NAME: props.Bucket ? props.Bucket.bucketName : '',
         ID_PARAM_NAME: props.IdResourceName || 'Id',
-        PARENT_PARAM_NAME: props.ParentResourceName ? props.ParentFieldName || 'ParentId' : 'no'
+        PARENT_PARAM_NAME: props.ParentResourceName ? props.ParentFieldName || 'ParentId' : 'no',
+        IOT_ENDPOINT_ADDRESS: IotEndpointAddress
       }
     });
 
@@ -89,6 +92,15 @@ export class BaseCrudApi extends cdk.Construct {
         ],
         resources: [
           this.table.tableArn
+        ]
+      }));
+
+      this.backendFunction.addToRolePolicy(new PolicyStatement({
+        actions: [
+          'iot:Publish'
+        ],
+        resources: [
+          `arn:aws:iot:${Aws.REGION}:${Aws.ACCOUNT_ID}:topic/AfterSignals/events/*`
         ]
       }));
     }

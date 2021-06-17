@@ -128,6 +128,7 @@ export interface BaseCrudApiOperationConfiguration {
   InputModel?: Model;
   Response?: BaseCrudApiOperationResponseConfiguration;
   BackendFunction?: IFunction;
+  SuccessEvent?: string;
 }
 
 export interface BaseCrudApiOperationS3FieldConfiguration {

@@ -138,7 +138,8 @@ export class GlobalCRUDResource extends Resource {
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
                 OutputFields: (props.Configuration.Operations.Create!.Response! || {}).Fields,
-                ParentId: `$input.params('parentId')`
+                ParentId: `$input.params('parentId')`,
+                SuccessEvent: props.Configuration.Operations.Create!.SuccessEvent
               },
               Data: "'$input.json('$')'"
             }).split('"\'').join('').split('\'"').join('')

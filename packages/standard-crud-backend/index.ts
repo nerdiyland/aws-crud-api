@@ -1,3 +1,4 @@
+import { IotData } from 'aws-sdk';
 import Log from '@dazn/lambda-powertools-logger';
 import { ItemsCrud } from './items-crud';
 import { FunctionEvent } from '@aftersignals/models/apis/base/FunctionEvent';
@@ -5,6 +6,8 @@ import { CreateItemRequest } from '@aftersignals/models/apis/base/contracts/Crea
 import { ListItemsRequest } from '@aftersignals/models/apis/base/contracts/ListItemsRequest';
 import { ExtendedJSONSchema } from '@aftersignals/models/base/ExtendedSchema';
 import Schemas from '@aftersignals/models/schema.extended.json'
+import { v4 as uuid } from 'uuid';
+import { join } from 'path/posix';
 
 export enum OperationType {
   CREATE_ITEM = 'createItem',
@@ -15,6 +18,8 @@ export enum OperationType {
 }
 
 const INVALID_OPERATION_EXCEPTION = new Error('Invalid operation requested');
+
+const IotEndpointAddress = process.env.IOT_ENDPOINT_ADDRESS!;
 
 /* TODO */
 export const handler = async (event: FunctionEvent<any>) => {
@@ -29,7 +34,8 @@ export const handler = async (event: FunctionEvent<any>) => {
     IndexName,
     ListType,
     OutputFields,
-    S3Fields
+    S3Fields,
+    SuccessEvent
   } = event.Params as any;
   
   const Data = event.Data;
@@ -57,7 +63,7 @@ export const handler = async (event: FunctionEvent<any>) => {
     IndexName,
     ListType,
     OutputFields,
-    S3Fields
+    S3Fields,
   });
 
   try {
@@ -65,6 +71,21 @@ export const handler = async (event: FunctionEvent<any>) => {
       case OperationType.CREATE_ITEM:
         Log.info('Processing item creation');
         const createResult = await itemsCrud.createItem(Data as CreateItemRequest);
+        if (SuccessEvent) {
+          const iotData = new IotData({
+            endpoint: IotEndpointAddress
+          });
+
+          await iotData.publish({
+            topic: join(`AfterSignals/events`, UserId, SuccessEvent),
+            payload: {
+              Id: createResult.Id,
+              UserId,
+              EventId: uuid(),
+              EventDate: new Date().toISOString(),
+            }
+          }).promise();
+        }
         return mapResponse(createResult, OutputFields);
       case OperationType.LIST_ITEMS:
         Log.info('Processing item list request');

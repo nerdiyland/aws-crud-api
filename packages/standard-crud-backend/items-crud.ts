@@ -255,7 +255,6 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     const Key = {};
 
-    
     if (parentField) {
       (Key as any)[parentField] = parentId;
     }
