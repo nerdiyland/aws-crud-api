@@ -4,7 +4,7 @@ import { AttributeType, BillingMode, ITable, Table } from '@aws-cdk/aws-dynamodb
 import { PolicyStatement, ServicePrincipal } from '@aws-cdk/aws-iam';
 import { AssetCode, Function, IFunction, Runtime } from '@aws-cdk/aws-lambda';
 import * as cdk from '@aws-cdk/core';
-import { Aws, CfnOutput, Fn, RemovalPolicy } from '@aws-cdk/core';
+import { Aws, CfnOutput, Duration, Fn, RemovalPolicy } from '@aws-cdk/core';
 import { BaseCrudApiProps } from './models';
 import { GlobalCRUDResource } from './resources/global-resource';
 import { IndividualCRUDResource } from './resources/individual-resource';
@@ -69,8 +69,8 @@ export class BaseCrudApi extends cdk.Construct {
       handler: 'index.handler',
       runtime: Runtime.NODEJS_12_X,
       description: `${props.ComponentName}/${props.ResourcePath} - Standard backend for CRUD apis`,
-      memorySize: props.BackendMemory,
-      timeout: props.BackendTimeout,
+      memorySize: props.BackendMemory || 1024,
+      timeout: props.BackendTimeout || Duration.seconds(10),
       logRetention: RetentionDays.ONE_MONTH,
       environment: {
         ITEMS_TABLE_NAME: this.table.tableName,
