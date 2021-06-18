@@ -100,10 +100,44 @@ export const handler = async (event: FunctionEvent<any>) => {
       case OperationType.UPDATE_ITEM:
         Log.info('Updating item by id', { Id });
         const updateResult = await itemsCrud.updateItem(Id!, Data);
+        if (SuccessEvent) {
+          Log.info('Operation is configured to submit an event', { EventTopic: SuccessEvent });
+          
+          const iotData = new IotData({
+            endpoint: IotEndpointAddress
+          });
+
+          await iotData.publish({
+            topic: join(`AfterSignals/events`, UserId, SuccessEvent),
+            payload: JSON.stringify({
+              Id: updateResult.Id,
+              UserId,
+              EventId: uuid(),
+              EventDate: new Date().toISOString(),
+            })
+          }).promise();
+        }
         return updateResult;
       case OperationType.DELETE_ITEM:
         Log.info('Deleting item by id', { Id });
         await itemsCrud.deleteItem(Id!);
+        if (SuccessEvent) {
+          Log.info('Operation is configured to submit an event', { EventTopic: SuccessEvent });
+          
+          const iotData = new IotData({
+            endpoint: IotEndpointAddress
+          });
+
+          await iotData.publish({
+            topic: join(`AfterSignals/events`, UserId, SuccessEvent),
+            payload: JSON.stringify({
+              Id,
+              UserId,
+              EventId: uuid(),
+              EventDate: new Date().toISOString(),
+            })
+          }).promise();
+        }
         return;
       default:
         Log.error('Unknown operation requested', { OperationName });
