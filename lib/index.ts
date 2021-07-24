@@ -1,15 +1,15 @@
-import { RetentionDays } from '@aws-cdk/aws-logs';
-import { IRestApi, RestApi } from '@aws-cdk/aws-apigateway';
-import { AttributeType, BillingMode, ITable, Table } from '@aws-cdk/aws-dynamodb';
-import { PolicyStatement, ServicePrincipal } from '@aws-cdk/aws-iam';
-import { AssetCode, Function, IFunction, Runtime } from '@aws-cdk/aws-lambda';
-import * as cdk from '@aws-cdk/core';
-import { Aws, CfnOutput, Duration, Fn, RemovalPolicy } from '@aws-cdk/core';
+import { RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { IRestApi, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { AttributeType, BillingMode, ITable, Table } from 'aws-cdk-lib/aws-dynamodb';
+import { PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { AssetCode, Function, IFunction, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Aws, CfnOutput, Duration, Fn, RemovalPolicy } from 'aws-cdk-lib';
 import { BaseCrudApiProps } from './models';
 import { GlobalCRUDResource } from './resources/global-resource';
 import { IndividualCRUDResource } from './resources/individual-resource';
+import { Construct } from 'constructs';
 
-export class BaseCrudApi extends cdk.Construct {
+export class BaseCrudApi extends Construct {
 
   public readonly api: RestApi;
   public readonly table: ITable;
@@ -18,7 +18,7 @@ export class BaseCrudApi extends cdk.Construct {
   public readonly globalResource: GlobalCRUDResource;
   public readonly individualResource: IndividualCRUDResource;
 
-  constructor(scope: cdk.Construct, id: string, props: BaseCrudApiProps) {
+  constructor(scope: Construct, id: string, props: BaseCrudApiProps) {
     super(scope, id);
 
     const IotEndpointAddress = Fn.importValue('AfterSignals::Core::IotEndpointAddress');

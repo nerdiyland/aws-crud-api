@@ -1,8 +1,8 @@
-import { Resource, Method, RequestValidator, LambdaIntegration, PassthroughBehavior, AuthorizationType, Model } from '@aws-cdk/aws-apigateway';
-import { Construct } from '@aws-cdk/core';
+import { Resource, Method, RequestValidator, LambdaIntegration, PassthroughBehavior, AuthorizationType, Model } from 'aws-cdk-lib/aws-apigateway';
+import { Construct } from 'constructs';
 import { ResourceConfiguration } from './global-resource';
-import { Function } from '@aws-cdk/aws-lambda';
-import { PolicyStatement } from '@aws-cdk/aws-iam';
+import { Function } from 'aws-cdk-lib/aws-lambda';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 
 /**

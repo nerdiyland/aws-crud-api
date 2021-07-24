@@ -1,8 +1,8 @@
-import { IBucket } from '@aws-cdk/aws-s3';
-import { IResource, JsonSchema, Model, RequestValidator, RestApi } from "@aws-cdk/aws-apigateway";
-import { AttributeType, ITable } from "@aws-cdk/aws-dynamodb";
-import { IFunction } from "@aws-cdk/aws-lambda";
-import { Duration } from "@aws-cdk/core";
+import { IBucket } from 'aws-cdk-lib/aws-s3';
+import { IResource, JsonSchema, Model, RequestValidator, RestApi } from "aws-cdk-lib/aws-apigateway";
+import { AttributeType, ITable } from "aws-cdk-lib/aws-dynamodb";
+import { IFunction } from "aws-cdk-lib/aws-lambda";
+import { Duration } from "aws-cdk-lib";
 
 export interface BaseCrudApiProps {
 

@@ -1,9 +1,9 @@
-import { AuthorizationType, LambdaIntegration, Method, MethodOptions, Model, PassthroughBehavior, RequestValidator, Resource, ResourceProps } from "@aws-cdk/aws-apigateway";
-import { Construct } from "@aws-cdk/core";
-import { ITable } from '@aws-cdk/aws-dynamodb';
-import { PolicyStatement } from '@aws-cdk/aws-iam';
+import { AuthorizationType, LambdaIntegration, Method, MethodOptions, Model, PassthroughBehavior, RequestValidator, Resource, ResourceProps } from "aws-cdk-lib/aws-apigateway";
+import { Construct } from "constructs";
+import { ITable } from 'aws-cdk-lib/aws-dynamodb';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { BaseCrudApiProps } from "../models";
-import { IFunction } from "@aws-cdk/aws-lambda";
+import { IFunction } from "aws-cdk-lib/aws-lambda";
 
 export interface ExtendedConfiguration extends BaseCrudApiProps {
   BackendFunction: IFunction;
