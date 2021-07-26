@@ -125,7 +125,7 @@ export class GlobalCRUDResource extends Resource {
         resource: this,
         integration: new LambdaIntegration(fn, {
           proxy: false,
-          credentialsPassthrough: true,
+          credentialsPassthrough: false,
           requestParameters: !!props.Configuration.ParentResourceName ? {
             'integration.request.path.parentId': `method.request.path.${props.Configuration.ParentResourceName}`
           } : undefined,
@@ -192,7 +192,7 @@ export class GlobalCRUDResource extends Resource {
         resource: this,
         integration: new LambdaIntegration(props.Configuration.BackendFunction, {
           proxy: false,
-          credentialsPassthrough: true,
+          credentialsPassthrough: false,
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {

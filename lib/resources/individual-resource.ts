@@ -56,7 +56,7 @@ export class IndividualCRUDResource extends Resource {
         resource: this,
         integration: new LambdaIntegration(props.Configuration.BackendFunction, {
           proxy: false,
-          credentialsPassthrough: true,
+          credentialsPassthrough: false,
           requestParameters: {
             'integration.request.path.id': 'method.request.path.id'
           },
@@ -145,7 +145,7 @@ export class IndividualCRUDResource extends Resource {
         resource: this,
         integration: new LambdaIntegration(props.Configuration.BackendFunction, {
           proxy: false,
-          credentialsPassthrough: true,
+          credentialsPassthrough: false,
           requestParameters: {
             'integration.request.path.id': 'method.request.path.id'
           },
@@ -236,7 +236,7 @@ export class IndividualCRUDResource extends Resource {
         resource: this,
         integration: new LambdaIntegration(props.Configuration.BackendFunction, {
           proxy: false,
-          credentialsPassthrough: true,
+          credentialsPassthrough: false,
           requestParameters: {
             'integration.request.path.id': 'method.request.path.id'
           },
