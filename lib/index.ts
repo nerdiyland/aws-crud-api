@@ -24,15 +24,16 @@ export class BaseCrudApi extends Construct {
     const IotEndpointAddress = Fn.importValue('AfterSignals::Core::IotEndpointAddress');
 
     // Initialise the API
-    this.api = props.Api || new RestApi(this, 'RestApi', {
-      restApiName: props.ComponentName,
-      defaultCorsPreflightOptions: {
-        allowOrigins: ['*'],
-        allowCredentials: true,
-        allowHeaders: ['*'],
-        allowMethods: ['*'],
-      }
-    });
+    this.api = props.Api;
+    //  || new RestApi(this, 'RestApi', {
+    //   restApiName: props.ComponentName,
+    //   defaultCorsPreflightOptions: {
+    //     allowOrigins: ['*'],
+    //     allowCredentials: true,
+    //     allowHeaders: ['*'],
+    //     allowMethods: ['*'],
+    //   }
+    // });
 
     this.table = props.Table || new Table(this, 'Table', {
       removalPolicy: RemovalPolicy.DESTROY,
@@ -68,7 +69,7 @@ export class BaseCrudApi extends Construct {
       code: new AssetCode(`${__dirname}/../packages/standard-crud-backend`),
       handler: 'index.handler',
       runtime: Runtime.NODEJS_12_X,
-      description: `${props.ComponentName}/${props.ResourcePath} - Standard backend for CRUD apis`,
+      description: `${props.ResourcePath} - Standard backend for CRUD apis`,
       memorySize: props.BackendMemory || 1024,
       timeout: props.BackendTimeout || Duration.seconds(10),
       logRetention: RetentionDays.ONE_MONTH,
@@ -143,7 +144,7 @@ export class BaseCrudApi extends Construct {
       }
     });
 
-    new CfnOutput(this, 'AfterSignals::ComponentName', { value: props.ComponentName });
+    new CfnOutput(this, 'AfterSignals::ComponentName', { value: this.api.restApiName });
     new CfnOutput(this, 'AfterSignals::ComponentType', { value: 'rest' });
     new CfnOutput(this, 'AfterSignals::EntryPoint', { value: this.api.url });
   }

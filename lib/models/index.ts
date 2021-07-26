@@ -7,9 +7,15 @@ import { Duration } from "aws-cdk-lib";
 export interface BaseCrudApiProps {
 
   /**
+   * Iot endpoint address for the solution
+   * If none is used, an export will be tried and fetched from cloudformation
+   */
+  IotEndpointAddress?: string;
+
+  /**
    * Logical name for the component. It'd be used on outputs and other identifiers
    */
-  ComponentName: string;
+  ComponentName?: string;
   
   /**
    * Defines the path for this API resource
