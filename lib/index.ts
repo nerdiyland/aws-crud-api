@@ -21,10 +21,10 @@ export class BaseCrudApi extends Construct {
   constructor(scope: Construct, id: string, props: BaseCrudApiProps) {
     super(scope, id);
 
-    const IotEndpointAddress = Fn.importValue('AfterSignals::Core::IotEndpointAddress');
+    const IotEndpointAddress = props.IotEndpointAddress || Fn.importValue('AfterSignals::Core::IotEndpointAddress');
 
     // Initialise the API
-    this.api = props.Api;
+    this.api = props.Api!;
     //  || new RestApi(this, 'RestApi', {
     //   restApiName: props.ComponentName,
     //   defaultCorsPreflightOptions: {
