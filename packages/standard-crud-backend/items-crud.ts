@@ -246,6 +246,10 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     (Key as any)[idField] = itemId;
 
+    Log.debug('Delete item request', {
+      Key
+    });
+
     await this.ddb.delete({
       TableName: this.props.ItemsTableName,
       Key: {
