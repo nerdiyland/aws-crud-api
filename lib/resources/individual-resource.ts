@@ -248,6 +248,15 @@ export class IndividualCRUDResource extends Resource {
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'deleteItem',
               }
+            }).split('"\'').join('').split('\'"').join(''),
+            
+            'application/json': JSON.stringify({
+              Params: {
+                [props.Configuration.IdFieldName || 'Id']: `$input.params('${props.Configuration.IdResourceName || 'id'}')`,
+                [props.Configuration.ParentFieldName!]: props.Configuration.ParentResourceName ? `$input.params('${props.Configuration.ParentResourceName}')` : undefined,
+                UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
+                OperationName: 'deleteItem',
+              }
             }).split('"\'').join('').split('\'"').join('')
           },
           integrationResponses: [
