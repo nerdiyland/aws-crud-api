@@ -234,6 +234,18 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       throw ItemsCrud.INVALID_ITEM_ID_EXCEPTION;
     }
 
+    const idField = this.props.IdFieldName || 'Id';
+    const parentField = this.props.ParentFieldName;
+    const parentId = this.props.ParentId;
+
+    const Key = {};
+
+    if (parentField) {
+      (Key as any)[parentField] = parentId;
+    }
+
+    (Key as any)[idField] = itemId;
+
     await this.ddb.delete({
       TableName: this.props.ItemsTableName,
       Key: {
@@ -246,12 +258,14 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
    * Retrieves the item identified by the provided ID.
    * @param itemId Id of the item
    */
-  async getItemById (itemId: string, parentId?: string): Promise<R> {
+  async getItemById (itemId: string): Promise<R> {
     if (!itemId) {
       throw ItemsCrud.INVALID_ITEM_ID_EXCEPTION;
     }
+    
     const idField = this.props.IdFieldName || 'Id';
     const parentField = this.props.ParentFieldName;
+    const parentId = this.props.ParentId;
 
     const Key = {};
 
