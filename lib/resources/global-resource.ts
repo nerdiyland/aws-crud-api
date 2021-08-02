@@ -203,7 +203,7 @@ export class GlobalCRUDResource extends Resource {
                 EntitySchema: props.Configuration.EntitySchema,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
-                ParentId: configSource?.ParentId ? `$input.params('${configSource.ParentId!.Param}')` : undefined
+                ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : undefined
               },
               Data: "'$input.json('$')'" // TODO
             }).split('"\'').join('').split('\'"').join('')

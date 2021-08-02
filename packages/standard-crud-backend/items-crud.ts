@@ -355,7 +355,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         }
       }).promise();
     }
-    else if (this.props.ParentId !== undefined) {
+    else if (this.props.ParentFieldName !== undefined) {
       Log.info('Fetching items by ParentId', { ParentId: this.props.ParentId, ParentIdField: this.props.ParentFieldName });
       items = await this.ddb.query({
         TableName: this.props.ItemsTableName,
