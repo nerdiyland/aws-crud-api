@@ -141,7 +141,7 @@ export interface BaseCrudApiOperationConfiguration {
 export enum BaseCrudApiParameterSource {
   PATH = 'path',
   QUERYSTRING = 'querystring',
-  HEADER = 'header'
+  HEADER = 'header',
 }
 
 export interface BaseCrudApiOperationParentConfiguration {

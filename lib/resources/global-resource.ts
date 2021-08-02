@@ -75,11 +75,21 @@ export class GlobalCRUDResource extends Resource {
     // Create item
     if(props.Configuration.Operations.Create) {
       let inputModel: Model;
+      const createSource = props.Configuration.Operations.Create;
       
       const createMethodOptions: MethodOptions = {
         authorizationType: AuthorizationType.IAM,
         operationName: props.Configuration.Operations.Create!.OperationName,
         // TODO Response models
+        requestParameters: {
+
+          // Add `ParentId` to required method parameters
+          ...(!createSource!.ParentId ? {} : {
+            [`method.request.${createSource!.ParentId!.Source}.${createSource!.ParentId!.Param}`]: true
+          })
+
+          // TODO Other parameters
+        },
         requestValidator: requestValidator,
         methodResponses: [
           {
@@ -110,25 +120,21 @@ export class GlobalCRUDResource extends Resource {
           'application/json': props.Configuration.Operations.Create!.InputModel
         }
       }
+
       
-      if (props.Configuration.ParentResourceName) {
-
-        // @ts-ignore
-        createMethodOptions.requestParameters = {
-          [`method.request.path.${props.Configuration.ParentResourceName || 'parentId'}`]: !!props.Configuration.ParentResourceName
-        }
-      }
-
-      const fn = props.Configuration.Operations.Create.BackendFunction || props.Configuration.BackendFunction;
+      const fn = createSource.BackendFunction || props.Configuration.BackendFunction;
       this.createItemMethod = new Method(this, 'CreateItemMethod', {
         httpMethod: 'POST',
         resource: this,
         integration: new LambdaIntegration(fn, {
           proxy: false,
           credentialsPassthrough: false,
-          requestParameters: !!props.Configuration.ParentResourceName ? {
-            'integration.request.path.parentId': `method.request.path.${props.Configuration.ParentResourceName}`
-          } : undefined,
+          requestParameters: {
+            // Add `ParentId` to integration parameters
+            ...(!createSource!.ParentId ? {} : {
+              [`integration.request.${createSource!.ParentId!.Source}.${createSource!.ParentId!.Param}`]: `method.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`
+            })
+          },
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
@@ -137,9 +143,9 @@ export class GlobalCRUDResource extends Resource {
                 EntitySchema: props.Configuration.EntitySchema,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
-                OutputFields: (props.Configuration.Operations.Create!.Response! || {}).Fields,
-                ParentId: `$input.params('parentId')`, // TODO
-                SuccessEvent: props.Configuration.Operations.Create!.SuccessEvent
+                OutputFields: (createSource!.Response! || {}).Fields,
+                ParentId: createSource!.ParentId ? `$input.params('${createSource!.ParentId!.Param}')` : 'none',
+                SuccessEvent: createSource!.SuccessEvent
               },
               Data: "'$input.json('$')'"
             }).split('"\'').join('').split('\'"').join('')

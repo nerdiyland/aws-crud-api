@@ -179,9 +179,15 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     const schema: ExtendedJSONSchema = (this.props.InputSchema || Schemas.definitions.CreateItemRequest) as any;
     const scaffold = new Scaffold(schema, { 
       ...request, 
-      UserId: this.props.UserId,
+      UserId: this.props.UserId
     });
-    const Item: C = scaffold.data;
+    const Item: any = scaffold.data;
+
+    // Add parentId to object
+    if (this.props.ParentFieldName) {
+      const parentId = this.props.ParentId!;
+      Item[this.props.ParentFieldName] = parentId;
+    }
 
     // Manage S3 Fields
     let finalRequest: any = Item;
@@ -393,11 +399,15 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       throw ItemsCrud.INVALID_REQUEST_OBJECT;
     }
 
-    // TODO Test this
     const idField = this.props.IdFieldName || 'Id';
     const parentField = this.props.ParentFieldName;
+    
+    const parentId = this.props.ParentId;
 
-    let parent = parentField ? (request as any)[parentField] : undefined;
+    const Key = {
+      ...(!parentField ? {} : { [parentField]: parentId }),
+      [idField]: itemId
+    };
     
     delete (request as any)[idField];
 
@@ -447,14 +457,6 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         ...objectReplacement
       }
     }
-
-    const Key = {}
-
-    if (parentField) {
-      (Key as any)[parentField] = parent;
-    }
-
-    (Key as any)[idField] = itemId;
 
     const requestObject: DocumentClient.UpdateItemInput = {
       TableName: this.props.ItemsTableName,
