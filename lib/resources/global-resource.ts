@@ -132,7 +132,7 @@ export class GlobalCRUDResource extends Resource {
           requestParameters: {
             // Add `ParentId` to integration parameters
             ...(!createSource!.ParentId ? {} : {
-              [`integration.request.${createSource!.ParentId!.Source}.${createSource!.ParentId!.Param}`]: `method.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`
+              [`integration.request.${createSource!.ParentId!.Source}.${createSource!.ParentId!.Param}`]: `method.request.${createSource!.ParentId!.Source}.${createSource!.ParentId!.Param}`
             })
           },
           requestTemplates: {
