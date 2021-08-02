@@ -140,8 +140,8 @@ export class BaseCrudApi extends Construct {
         ...props,
         BackendFunction: this.backendFunction,
         Table: this.table,
-        Validator: props.Validator
-      }
+      },
+      Validator: props.Validator
     });
 
     new CfnOutput(this, 'AfterSignals::ComponentName', { value: this.api.restApiName });
