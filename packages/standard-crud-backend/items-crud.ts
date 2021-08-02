@@ -474,6 +474,6 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     await this.ddb.update(requestObject).promise();
 
-    return await this.getItemById(itemId, parent);
+    return await this.getItemById(itemId, parentId);
   }
 }
