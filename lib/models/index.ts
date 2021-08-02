@@ -135,6 +135,18 @@ export interface BaseCrudApiOperationConfiguration {
   Response?: BaseCrudApiOperationResponseConfiguration;
   BackendFunction?: IFunction;
   SuccessEvent?: string;
+  ParentId?: BaseCrudApiOperationParentConfiguration;
+}
+
+export enum BaseCrudApiParameterSource {
+  PATH = 'path',
+  QUERYSTRING = 'querystring',
+  HEADER = 'header'
+}
+
+export interface BaseCrudApiOperationParentConfiguration {
+  Param: string;
+  Source: BaseCrudApiParameterSource;
 }
 
 export interface BaseCrudApiOperationS3FieldConfiguration {

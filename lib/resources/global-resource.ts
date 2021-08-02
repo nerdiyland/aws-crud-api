@@ -138,7 +138,7 @@ export class GlobalCRUDResource extends Resource {
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
                 OutputFields: (props.Configuration.Operations.Create!.Response! || {}).Fields,
-                ParentId: `$input.params('parentId')`,
+                ParentId: `$input.params('parentId')`, // TODO
                 SuccessEvent: props.Configuration.Operations.Create!.SuccessEvent
               },
               Data: "'$input.json('$')'"
@@ -203,7 +203,7 @@ export class GlobalCRUDResource extends Resource {
                 EntitySchema: props.Configuration.EntitySchema,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
-                ParentId: `$input.params('${props.Configuration.ParentResourceName}')`
+                ParentId: configSource?.ParentId ? `$input.params('${configSource.ParentId!.Param}')` : undefined
               },
               Data: "'$input.json('$')'" // TODO
             }).split('"\'').join('').split('\'"').join('')
@@ -236,6 +236,15 @@ export class GlobalCRUDResource extends Resource {
           operationName: configSource!.OperationName,
           requestModels: !configSource!.InputModel ? undefined : {
             'application/json': configSource!.InputModel
+          },
+          requestParameters: {
+
+            // Add `ParentId` to required method parameters
+            ...(!configSource!.ParentId ? {} : {
+              [`method.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`]: true
+            })
+
+            // TODO Other parameters
           },
           requestValidator: requestValidator,
           methodResponses: [
