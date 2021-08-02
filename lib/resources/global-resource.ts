@@ -203,10 +203,16 @@ export class GlobalCRUDResource extends Resource {
                 EntitySchema: props.Configuration.EntitySchema,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
-                ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : undefined
+                ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
               },
               Data: "'$input.json('$')'" // TODO
             }).split('"\'').join('').split('\'"').join('')
+          },
+          requestParameters: {
+            // Add `ParentId` to integration parameters
+            ...(!configSource!.ParentId ? {} : {
+              [`integration.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`]: `method.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`
+            })
           },
           integrationResponses: [
             {
