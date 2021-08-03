@@ -348,7 +348,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     let items: QueryOutput | ScanOutput;
     if (this.props.ListType === 'owned') {
-      Log.info('Fetching owned items', { UserId: this.props.UserId });
+      Log.info('Fetching owned items', { UserId: this.props.UserId, IndexName: this.props.IndexName, });
       items = await this.ddb.query({
         TableName: this.props.ItemsTableName,
         IndexName: this.props.IndexName,
@@ -362,9 +362,15 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       }).promise();
     }
     else if (this.props.ParentFieldName !== undefined) {
-      Log.info('Fetching items by ParentId', { ParentId: this.props.ParentId, ParentIdField: this.props.ParentFieldName });
+      Log.info('Fetching items by ParentId', { 
+        ParentId: this.props.ParentId, 
+        ParentIdField: this.props.ParentFieldName,
+        IndexName: this.props.IndexName,
+      });
+      
       items = await this.ddb.query({
         TableName: this.props.ItemsTableName,
+        IndexName: this.props.IndexName,
         KeyConditionExpression: '#parentId = :parentId',
         ExpressionAttributeNames: {
           '#parentId': this.props.ParentFieldName!
