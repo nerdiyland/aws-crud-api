@@ -354,7 +354,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         IndexName: this.props.IndexName,
         KeyConditionExpression: '#userId = :userId',
         ExpressionAttributeNames: {
-          '#userId': 'UserId'
+          '#userId': this.props.ParentFieldName || 'UserId'
         },
         ExpressionAttributeValues: {
           ':userId': this.props.UserId
