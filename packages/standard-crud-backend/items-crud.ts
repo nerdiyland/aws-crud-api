@@ -82,7 +82,7 @@ export interface ItemsCrudProps {
 
   S3Fields?: { [key: string]: any },
 
-  Security: BaseCrudApiOperationSecurityConfiguration;
+  Security?: BaseCrudApiOperationSecurityConfiguration;
 }
 
 /**
@@ -403,7 +403,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         break;
       default:
         // Filter items by security configuration
-        filteredItems = items.Items.filter((item: StandaloneObject) => {
+        filteredItems = items.Items!.filter((item: StandaloneObject) => {
           const itemOwner = item.UserId!;
 
           // TODO Manage team stuff
@@ -424,7 +424,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
       // TODO Manage team stuff
       const securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
-      const security = this.props.Security[securityToApply]!;
+      const security = this.props.Security![securityToApply]!;
       const fields = (security.Fields || Object.keys(item));
       
       // TODO Manage sub-field permissions
