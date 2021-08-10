@@ -131,6 +131,8 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
    */
   static NO_CHANGES_EXCEPTION = new Error('No changes were provided to the update request');
 
+  static UNAUTHORIZED_EXCEPTION = new Error('Unauthorized');
+
   /**
    * Service properties
    */
@@ -176,6 +178,13 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
   async createItem(request: C): Promise<C> {
     if (!request) {
       throw ItemsCrud.INVALID_REQUEST_OBJECT;
+    }
+
+    // If an ID is given, update instead
+    const requestId = (request as any)[this.props.IdFieldName || 'Id'];
+    if (!!requestId) {
+      Log.warn('Requested Creation, but this is actually an update. Redirecting')
+      return await this.updateItem(requestId, request as any) as any;
     }
 
     // TODO Validate model
@@ -255,6 +264,14 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     (Key as any)[idField] = itemId;
 
+    // Get item first
+    const item = await this.getItemById(itemId, parentId);
+    // Validate item security
+    const isAuthorized = this.verifyItemSecurity(item);
+    if (!isAuthorized) {
+      throw ItemsCrud.UNAUTHORIZED_EXCEPTION;
+    }
+
     Log.debug('Delete item request', {
       Key
     });
@@ -303,10 +320,14 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     // Verify ownership of object
-    // TODO 
+    // It's a 403, but show a 404 as user doesn't need to know whether the object exists.
+    let responseItem = response.Item!;
+    const isAuthorizedForItem = this.verifyItemSecurity(responseItem);
+    if (!isAuthorizedForItem) {
+      throw ItemsCrud.ITEM_NOT_FOUND_EXCEPTION;
+    }
 
     // Manage S3 Fields
-    let responseItem = response.Item!;
     if (this.props.S3Fields) {
       const s3KeyNames = Object.keys(this.props.S3Fields!);
       Log.info('Managing S3 fields', { fields: s3KeyNames });
@@ -342,7 +363,10 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       }
     }
 
-    return responseItem as R;
+    // Apply field level security
+    const mappedItem = this.applyFieldLevelSecurity(responseItem);
+
+    return mappedItem as R;
   }
 
   /**
@@ -449,19 +473,29 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     delete (request as any).UserId;
 
     if (parentField) delete (request as any)[parentField];
-
     (request as any).UpdatedAt = new Date().toISOString();
-    const changedKeys = Object.keys(request);
-    if (changedKeys.length === 1) {
-      throw ItemsCrud.NO_CHANGES_EXCEPTION;
-    }
 
     // Update updated date
     // TODO Do this better
     (request as any).UpdatedAt = new Date().toISOString();
 
+    // Get item first
+    const originalItem = await this.getItemById(itemId, parentId);
+    const isAuthorized = this.verifyItemSecurity(originalItem);
+    if (!isAuthorized) {
+      throw ItemsCrud.UNAUTHORIZED_EXCEPTION;
+    }
+
+    // Apply field-level permissions to change request
+    const mappedRequest = this.applyFieldLevelSecurity(request);
+
+    const changedKeys = Object.keys(mappedRequest);
+    if (changedKeys.length === 1) {
+      throw ItemsCrud.NO_CHANGES_EXCEPTION;
+    }
+
     // Manage S3 Fields
-    let finalRequest: any = request;
+    let finalRequest: any = mappedRequest;
     if (this.props.S3Fields) {
       const s3KeyNames = Object.keys(this.props.S3Fields!);
       Log.info('Managing S3 fields', { fields: s3KeyNames });
@@ -469,7 +503,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
         const s3KeyValue = this.props.S3Fields![s3Key];
         const key = path.join(`${s3KeyValue.Prefix || ''}`, this.props.UserId, itemId, `${s3Key}`);
-        const contents = (request as any)[s3Key];
+        const contents = (mappedRequest as any)[s3Key];
         const strContents = typeof(contents) === 'object' ? JSON.stringify(contents) : contents;
 
         const s3Response = await this.s3.putObject({
