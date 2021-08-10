@@ -514,7 +514,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     // TODO Manage team stuff
     const securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
-    const security = (this.props.Security || {})[securityToApply]!;
+    const security = ((this.props.Security || {})[securityToApply]) || {};
     const fields = (security.Fields || Object.keys(item));
     
     // TODO Manage sub-field permissions
