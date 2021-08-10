@@ -563,6 +563,11 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     const security = (this.props.Security || {})[securityToApply];
     
     if (!security) {
+
+      // FIXME To keep things working, we'll allow owners to fetch their items
+      // Even if no security was set o the api.
+      if (securityToApply === 'Owner') return true;
+
       return false;
     }
 
