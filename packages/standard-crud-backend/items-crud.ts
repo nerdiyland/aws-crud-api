@@ -395,6 +395,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     // Manage operation security
+    Log.debug('Managing item security', { OriginalListCount: items.Items!.length })
     let filteredItems = [];
     switch (this.props.ListType) {
       case 'owned':
@@ -403,37 +404,16 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         break;
       default:
         // Filter items by security configuration
-        filteredItems = items.Items!.filter((item: StandaloneObject) => {
-          const itemOwner = item.UserId!;
-
-          // TODO Manage team stuff
-          const securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
-          const security = (this.props.Security || {})[securityToApply];
-          
-          if (!security) {
-            return false;
-          }
-
-          return true;
-        });
+        filteredItems = items.Items!.filter((item: StandaloneObject) => this.verifyItemSecurity(item));
     }
-    
+
     // Parse field-level security
-    let mappedItems = filteredItems.map((item: StandaloneObject) => {
-      const itemOwner = item.UserId!;
-
-      // TODO Manage team stuff
-      const securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
-      const security = this.props.Security![securityToApply]!;
-      const fields = (security.Fields || Object.keys(item));
-      
-      // TODO Manage sub-field permissions
-      return fields.reduce((ret, field) => ({ ...ret, [field]: (item as any)[field]}), {})
-    });
-
+    Log.debug('Applying field-level security', { FilteredListCount: filteredItems.length });
+    let mappedItems = filteredItems.map((item: StandaloneObject) => this.applyFieldLevelSecurity(item));
 
     // TODO Paging out
 
+    Log.debug('Handing response to client');
     return mappedItems as any;
   }
 
@@ -527,5 +507,31 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     await this.ddb.update(requestObject).promise();
 
     return await this.getItemById(itemId, parentId);
+  }
+
+  private applyFieldLevelSecurity (item: StandaloneObject) {
+    const itemOwner = item.UserId!;
+
+    // TODO Manage team stuff
+    const securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
+    const security = (this.props.Security || {})[securityToApply]!;
+    const fields = (security.Fields || Object.keys(item));
+    
+    // TODO Manage sub-field permissions
+    return fields.reduce((ret, field) => ({ ...ret, [field]: (item as any)[field]}), {})
+  }
+
+  private verifyItemSecurity (item: StandaloneObject): boolean {
+    const itemOwner = item.UserId!;
+
+    // TODO Manage team stuff
+    const securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
+    const security = (this.props.Security || {})[securityToApply];
+    
+    if (!security) {
+      return false;
+    }
+
+    return true;
   }
 }
