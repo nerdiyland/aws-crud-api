@@ -36,7 +36,8 @@ export const handler = async (event: FunctionEvent<any>) => {
     ListType,
     OutputFields,
     S3Fields,
-    SuccessEvent
+    SuccessEvent,
+    Security
   } = event.Params as any;
   
   const Data = event.Data;
@@ -66,6 +67,7 @@ export const handler = async (event: FunctionEvent<any>) => {
     ListType,
     OutputFields,
     S3Fields,
+    Security
   });
 
   try {

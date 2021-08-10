@@ -1,3 +1,4 @@
+import { BaseCrudApiOperationSecurityConfiguration } from './../../lib/models/index';
 import { DocumentClient, QueryOutput, ScanOutput } from 'aws-sdk/clients/dynamodb';
 import S3 from 'aws-sdk/clients/s3';
 import { v4 as uuid } from 'uuid';
@@ -80,6 +81,8 @@ export interface ItemsCrudProps {
   OutputFields?: string[];
 
   S3Fields?: { [key: string]: any },
+
+  Security: BaseCrudApiOperationSecurityConfiguration;
 }
 
 /**
@@ -299,6 +302,9 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       throw ItemsCrud.ITEM_NOT_FOUND_EXCEPTION;
     }
 
+    // Verify ownership of object
+    // TODO 
+
     // Manage S3 Fields
     let responseItem = response.Item!;
     if (this.props.S3Fields) {
@@ -360,6 +366,8 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
           ':userId': this.props.UserId
         }
       }).promise();
+      
+      
     }
     else if (this.props.ParentFieldName !== undefined) {
       Log.info('Fetching items by ParentId', { 
@@ -386,9 +394,47 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       }).promise();
     }
 
+    // Manage operation security
+    let filteredItems = [];
+    switch (this.props.ListType) {
+      case 'owned':
+        filteredItems = items.Items!;
+        // Security here is handled by default. Only owned items will be fetched.
+        break;
+      default:
+        // Filter items by security configuration
+        filteredItems = items.Items.filter((item: StandaloneObject) => {
+          const itemOwner = item.UserId!;
+
+          // TODO Manage team stuff
+          const securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
+          const security = (this.props.Security || {})[securityToApply];
+          
+          if (!security) {
+            return false;
+          }
+
+          return true;
+        });
+    }
+    
+    // Parse field-level security
+    let mappedItems = filteredItems.map((item: StandaloneObject) => {
+      const itemOwner = item.UserId!;
+
+      // TODO Manage team stuff
+      const securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
+      const security = this.props.Security[securityToApply]!;
+      const fields = (security.Fields || Object.keys(item));
+      
+      // TODO Manage sub-field permissions
+      return fields.reduce((ret, field) => ({ ...ret, [field]: (item as any)[field]}), {})
+    });
+
+
     // TODO Paging out
 
-    return items.Items! as any;
+    return mappedItems as any;
   }
 
   /**

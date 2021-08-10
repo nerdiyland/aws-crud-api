@@ -145,6 +145,7 @@ export class GlobalCRUDResource extends Resource {
                 ParentFieldName: props.Configuration.ParentFieldName,
                 OutputFields: (createSource!.Response! || {}).Fields,
                 ParentId: createSource!.ParentId ? `$input.params('${createSource!.ParentId!.Param}')` : 'none',
+                Security: createSource!.Security,
                 SuccessEvent: createSource!.SuccessEvent
               },
               Data: "'$input.json('$')'"
@@ -209,6 +210,7 @@ export class GlobalCRUDResource extends Resource {
                 EntitySchema: props.Configuration.EntitySchema,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
+                Security: configSource!.Security,
                 ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
               },
               Data: "'$input.json('$')'" // TODO

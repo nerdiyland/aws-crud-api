@@ -74,6 +74,7 @@ export class IndividualCRUDResource extends Resource {
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 S3Fields: props.Configuration.S3Fields,
                 OperationName: 'getItemById',
+                Security: configSource.Security,
                 ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
               },
             }).split('"\'').join('').split('\'"').join('')
@@ -177,6 +178,7 @@ export class IndividualCRUDResource extends Resource {
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
                 S3Fields: props.Configuration.S3Fields,
+                Security: configSource.Security,
                 ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
               },
               Data: "'$input.json('$')'"
@@ -279,6 +281,7 @@ export class IndividualCRUDResource extends Resource {
                 ParentFieldName: props.Configuration.ParentFieldName,
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'deleteItem',
+                Security: configSource.Security,
                 ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
               }
             }).split('"\'').join('').split('\'"').join(''),
@@ -289,6 +292,7 @@ export class IndividualCRUDResource extends Resource {
                 [props.Configuration.ParentFieldName!]: props.Configuration.ParentResourceName ? `$input.params('${props.Configuration.ParentResourceName}')` : undefined,
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'deleteItem',
+                Security: configSource.Security,
                 ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
               }
             }).split('"\'').join('').split('\'"').join('')

@@ -136,6 +136,7 @@ export interface BaseCrudApiOperationConfiguration {
   BackendFunction?: IFunction;
   SuccessEvent?: string;
   ParentId?: BaseCrudApiOperationParentConfiguration;
+  Security?: BaseCrudApiOperationSecurityConfiguration;
 }
 
 export enum BaseCrudApiParameterSource {
@@ -164,4 +165,20 @@ export interface BaseCrudApiOperationResponseConfiguration {
 export interface BaseCrudApiOperationModelConfiguration {
   ModelName: string;
   Schema: JsonSchema;
+}
+
+export interface BaseCrudApiOperationSecurityConfiguration {
+  Owner?: BaseCrudApiOperationSecurityRoleConfiguration;
+
+  // TODO Add team-specific permissions for team roles
+  // Team?: BaseCrudApiOperationSecurityRoleConfiguration;
+
+  Public?: BaseCrudApiOperationSecurityRoleConfiguration;
+}
+
+/**
+ * Security 
+ */
+export interface BaseCrudApiOperationSecurityRoleConfiguration {
+  Fields?: string[];
 }
