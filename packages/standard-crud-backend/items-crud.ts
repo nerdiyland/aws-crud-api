@@ -612,7 +612,6 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       if (teamResources.length) return true;
 
       Log.error('This is not a team resource', { UserId: this.props.UserId, ResourceId: item.Id! });
-      return false;
     }
 
     const security = (this.props.Security || {})[securityToApply];
