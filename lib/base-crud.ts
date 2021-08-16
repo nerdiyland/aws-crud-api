@@ -21,7 +21,13 @@ export class BaseCrudApi extends Construct {
   constructor(scope: Construct, id: string, props: BaseCrudApiProps) {
     super(scope, id);
 
+    // FIXME Work on these
     const IotEndpointAddress = props.IotEndpointAddress || Fn.importValue('AfterSignals::Core::IotEndpointAddress');
+    const TeamMembershipsTableArn = Fn.importValue('AfterSignals::Customers::TeamMembershipsTableArn');
+    const TeamResourcesTableArn = Fn.importValue('AfterSignals::Customers::TeamResourcesTableArn');
+
+    const teamMembershipsTable = Table.fromTableArn(this, 'TeamMembershipsTable', TeamMembershipsTableArn);
+    const teamResourcesTable = Table.fromTableArn(this, 'TeamResourcesTable', TeamResourcesTableArn);
 
     // Initialise the API
     this.api = props.Api!;
@@ -78,7 +84,10 @@ export class BaseCrudApi extends Construct {
         ITEMS_BUCKET_NAME: props.Bucket ? props.Bucket.bucketName : '',
         ID_PARAM_NAME: props.IdResourceName || 'Id',
         PARENT_PARAM_NAME: props.ParentResourceName ? props.ParentFieldName || 'ParentId' : 'no',
-        IOT_ENDPOINT_ADDRESS: IotEndpointAddress
+        IOT_ENDPOINT_ADDRESS: IotEndpointAddress,
+
+        TEAM_MEMBERSHIPS_TABLE_NAME: teamMembershipsTable.tableName,
+        TEAM_RESOURCES_TABLE_NAME: teamResourcesTable.tableName
       }
     });
 
@@ -102,6 +111,17 @@ export class BaseCrudApi extends Construct {
         ],
         resources: [
           `arn:aws:iot:${Aws.REGION}:${Aws.ACCOUNT_ID}:topic/AfterSignals/events/*`
+        ]
+      }));
+
+      this.backendFunction.addToRolePolicy(new PolicyStatement({
+        actions: [
+          'dynamodb:Query',
+          'dynamodb:BatchGetItem'
+        ],
+        resources: [
+          `${teamMembershipsTable.tableArn}/index/ByUserId`,
+          teamResourcesTable.tableArn
         ]
       }));
     }

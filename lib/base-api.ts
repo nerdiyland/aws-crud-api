@@ -16,13 +16,13 @@ export class BaseApi extends Construct {
   constructor (scope: Construct, id: string, props: BaseApiProps) {
     super(scope, id);
 
-    this.apiLogGroup = new LogGroup(this, 'MarketplaceApiLogs', {
+    this.apiLogGroup = new LogGroup(this, 'ApiLogs', {
       removalPolicy: RemovalPolicy.DESTROY,
       retention: RetentionDays.ONE_WEEK
     });
 
     // Create API
-    this.api = new RestApi(this, 'AuthSolutionAPI', {
+    this.api = new RestApi(this, 'RestApi', {
       restApiName: props.ApiName,
       defaultCorsPreflightOptions: {
         allowOrigins: ['*'],
