@@ -608,7 +608,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       }
 
       const teamResourcesResponse = await this.ddb.batchGet(teamResourceRequest).promise();
-      const teamResources = teamResourcesResponse.Responses!;
+      const teamResources = Object.values(teamResourcesResponse.Responses!);
       if (teamResources.length) return true;
 
       Log.error('This is not a team resource', { UserId: this.props.UserId, ResourceId: item.Id! });
