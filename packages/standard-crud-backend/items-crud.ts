@@ -577,7 +577,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     // TODO Manage team stuff
     let securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
-    if (securityToApply === 'Public' && this.props.Security!.Team) {
+    if (securityToApply === 'Public' && this.props.Security?.Team) {
       Log.info('Finding user teams and resources');
       const userTeamsResponse = await this.ddb.query({
         TableName: this.props.TeamMembershipsTableName!,
