@@ -23,11 +23,19 @@ export class BaseCrudApi extends Construct {
 
     // FIXME Work on these
     const IotEndpointAddress = props.IotEndpointAddress || Fn.importValue('AfterSignals::Core::IotEndpointAddress');
-    const TeamMembershipsTableArn = Fn.importValue('AfterSignals::Customers::TeamMembershipsTableArn');
-    const TeamResourcesTableArn = Fn.importValue('AfterSignals::Customers::TeamResourcesTableArn');
 
-    const teamMembershipsTable = Table.fromTableArn(this, 'TeamMembershipsTable', TeamMembershipsTableArn);
-    const teamResourcesTable = Table.fromTableArn(this, 'TeamResourcesTable', TeamResourcesTableArn);
+    let teamMembershipsTable: ITable | undefined = props.TeamMembershipsTable;
+    let teamResourcesTable: ITable | undefined = props.TeamResourcesTable;
+
+    if (!teamMembershipsTable) {
+      const TeamMembershipsTableArn = Fn.importValue('AfterSignals::Customers::TeamMembershipsTableArn');
+      teamMembershipsTable = Table.fromTableArn(this, 'TeamMembershipsTable', TeamMembershipsTableArn);
+    }
+
+    if (!teamResourcesTable) {
+      const TeamResourcesTableArn = Fn.importValue('AfterSignals::Customers::TeamResourcesTableArn');
+      teamResourcesTable = Table.fromTableArn(this, 'TeamResourcesTable', TeamResourcesTableArn);
+    }
 
     // Initialise the API
     this.api = props.Api!;

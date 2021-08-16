@@ -110,6 +110,9 @@ export interface BaseCrudApiProps {
    * This is useful when APIs handle a resource that stores large data as part of the contract
    */
   S3Fields?: { [key: string]: BaseCrudApiOperationS3FieldConfiguration }
+
+  TeamMembershipsTable?: ITable;
+  TeamResourcesTable?: ITable;
 }
   
 export interface BaseCrudApiTableConfigurationProps {
