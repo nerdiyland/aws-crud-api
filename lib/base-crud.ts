@@ -128,7 +128,7 @@ export class BaseCrudApi extends Construct {
           'dynamodb:BatchGetItem'
         ],
         resources: [
-          `${teamMembershipsTable.tableArn}/index/ByUserId`,
+          `${teamMembershipsTable.tableArn}/index/ByMemberId`,
           teamResourcesTable.tableArn
         ]
       }));
