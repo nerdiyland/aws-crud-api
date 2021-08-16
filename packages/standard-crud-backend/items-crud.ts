@@ -564,6 +564,19 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     // TODO Manage team stuff
     let securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
+
+    const security = ((this.props.Security || {})[securityToApply]) || {};
+    const fields = (security.Fields || Object.keys(item));
+    
+    // TODO Manage sub-field permissions
+    return fields.reduce((ret, field) => ({ ...ret, [field]: (item as any)[field]}), {})
+  }
+
+  private async verifyItemSecurity (item: StandaloneObject): Promise<boolean> {
+    const itemOwner = item.UserId!;
+
+    // TODO Manage team stuff
+    let securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
     if (securityToApply === 'Public' && this.props.Security!.Team) {
       Log.info('Finding user teams and resources');
       const userTeamsResponse = await this.ddb.query({
@@ -602,20 +615,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       return false;
     }
 
-    const security = ((this.props.Security || {})[securityToApply]) || {};
-    const fields = (security.Fields || Object.keys(item));
-    
-    // TODO Manage sub-field permissions
-    return fields.reduce((ret, field) => ({ ...ret, [field]: (item as any)[field]}), {})
-  }
-
-  private async verifyItemSecurity (item: StandaloneObject): Promise<boolean> {
-    const itemOwner = item.UserId!;
-
-    // TODO Manage team stuff
-    const securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
     const security = (this.props.Security || {})[securityToApply];
-    
     if (!security) {
 
       // FIXME To keep things working, we'll allow owners to fetch their items
