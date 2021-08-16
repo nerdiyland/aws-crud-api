@@ -567,7 +567,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     if (securityToApply === 'Public' && this.props.Security!.Team) {
       Log.info('Finding user teams and resources');
       const userTeamsResponse = await this.ddb.query({
-        TableName: this.props.TeamMembershipsTableName,
+        TableName: this.props.TeamMembershipsTableName!,
         IndexName: 'ByMemberId',
         KeyConditionExpression: '#userId = :userId',
         ExpressionAttributeNames: {
@@ -578,7 +578,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         }
       }).promise();
 
-      const userTeams: TeamMember = userTeamsResponse.Items! as any[];
+      const userTeams: TeamMember[] = userTeamsResponse.Items! as any[];
       this.userTeams = userTeams.map((t: any) => t.TeamId!);
       Log.info('Fetching team resource information', { Teams: this.userTeams });
 
@@ -595,7 +595,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       }
 
       const teamResourcesResponse = await this.ddb.batchGet(teamResourceRequest).promise();
-      const teamResources = teamResourcesResponse.Responses;
+      const teamResources = teamResourcesResponse.Responses!;
       if (teamResources.length) return true;
 
       Log.error('This is not a team resource', { UserId: this.props.UserId, ResourceId: item.Id! });
