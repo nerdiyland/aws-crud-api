@@ -171,7 +171,7 @@ export interface BaseCrudApiOperationSecurityConfiguration {
   Owner?: BaseCrudApiOperationSecurityRoleConfiguration;
 
   // TODO Add team-specific permissions for team roles
-  // Team?: BaseCrudApiOperationSecurityRoleConfiguration;
+  Team?: BaseCrudApiOperationSecurityRoleConfiguration;
 
   Public?: BaseCrudApiOperationSecurityRoleConfiguration;
 }

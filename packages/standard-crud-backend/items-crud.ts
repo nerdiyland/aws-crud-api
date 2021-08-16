@@ -1,3 +1,4 @@
+import { TeamMember, TeamResource } from '@aftersignals/models/customers';
 import { BaseCrudApiOperationSecurityConfiguration } from './../../lib/models/index';
 import { DocumentClient, QueryOutput, ScanOutput } from 'aws-sdk/clients/dynamodb';
 import S3 from 'aws-sdk/clients/s3';
@@ -83,6 +84,10 @@ export interface ItemsCrudProps {
   S3Fields?: { [key: string]: any },
 
   Security?: BaseCrudApiOperationSecurityConfiguration;
+
+  TeamMembershipsTableName?: string;
+
+  TeamResourcesTableName?: string;
 }
 
 /**
@@ -147,6 +152,17 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
    * Accessor for S3
    */
   private readonly s3: S3;
+
+  /**
+   * Stores user teams
+   */
+  private userTeams: string[] = [];
+
+  /**
+   * Stores identifiers of resources managed by user teams
+   */
+  private userTeamsResources: string[] = [];
+
   
   constructor(props: ItemsCrudProps) {
     if (!props) {
@@ -267,7 +283,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     // Get item first
     const item = await this.getItemById(itemId, parentId);
     // Validate item security
-    const isAuthorized = this.verifyItemSecurity(item);
+    const isAuthorized = await this.verifyItemSecurity(item);
     if (!isAuthorized) {
       throw ItemsCrud.UNAUTHORIZED_EXCEPTION;
     }
@@ -322,7 +338,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     // Verify ownership of object
     // It's a 403, but show a 404 as user doesn't need to know whether the object exists.
     let responseItem = response.Item!;
-    const isAuthorizedForItem = this.verifyItemSecurity(responseItem);
+    const isAuthorizedForItem = await this.verifyItemSecurity(responseItem);
     if (!isAuthorizedForItem) {
       throw ItemsCrud.ITEM_NOT_FOUND_EXCEPTION;
     }
@@ -364,7 +380,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     // Apply field level security
-    const mappedItem = this.applyFieldLevelSecurity(responseItem);
+    const mappedItem = await this.applyFieldLevelSecurity(responseItem);
 
     return mappedItem as R;
   }
@@ -428,12 +444,12 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         break;
       default:
         // Filter items by security configuration
-        filteredItems = items.Items!.filter((item: StandaloneObject) => this.verifyItemSecurity(item));
+        filteredItems = await Promise.all(items.Items!.filter(async (item: StandaloneObject) => await this.verifyItemSecurity(item)));
     }
 
     // Parse field-level security
     Log.debug('Applying field-level security', { FilteredListCount: filteredItems.length });
-    let mappedItems = filteredItems.map((item: StandaloneObject) => this.applyFieldLevelSecurity(item));
+    let mappedItems = await Promise.all(filteredItems.map(async (item: StandaloneObject) => await this.applyFieldLevelSecurity(item)));
 
     // TODO Paging out
 
@@ -481,13 +497,13 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     // Get item first
     const originalItem = await this.getItemById(itemId, parentId);
-    const isAuthorized = this.verifyItemSecurity(originalItem);
+    const isAuthorized = await this.verifyItemSecurity(originalItem);
     if (!isAuthorized) {
       throw ItemsCrud.UNAUTHORIZED_EXCEPTION;
     }
 
     // Apply field-level permissions to change request
-    const mappedRequest = this.applyFieldLevelSecurity(request);
+    const mappedRequest = await this.applyFieldLevelSecurity(request);
 
     const changedKeys = Object.keys(mappedRequest);
     if (changedKeys.length === 1) {
@@ -543,11 +559,49 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     return await this.getItemById(itemId, parentId);
   }
 
-  private applyFieldLevelSecurity (item: StandaloneObject) {
+  private async applyFieldLevelSecurity (item: StandaloneObject) {
     const itemOwner = item.UserId!;
 
     // TODO Manage team stuff
-    const securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
+    let securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
+    if (securityToApply === 'Public' && this.props.Security!.Team) {
+      Log.info('Finding user teams and resources');
+      const userTeamsResponse = await this.ddb.query({
+        TableName: this.props.TeamMembershipsTableName,
+        IndexName: 'ByMemberId',
+        KeyConditionExpression: '#userId = :userId',
+        ExpressionAttributeNames: {
+          '#userId': 'MemberId',
+        },
+        ExpressionAttributeValues: {
+          ':userId': this.props.UserId
+        }
+      }).promise();
+
+      const userTeams: TeamMember = userTeamsResponse.Items! as any[];
+      this.userTeams = userTeams.map((t: any) => t.TeamId!);
+      Log.info('Fetching team resource information', { Teams: this.userTeams });
+
+      const teamResourceRequest = {
+        RequestItems: {
+          [this.props.TeamResourcesTableName!]: {
+            Keys: userTeams.map((team: TeamMember) => team.Id!)
+            .map((TeamId: string) => ({
+              TeamId,
+              Id: item.Id!
+            }))
+          }
+        }
+      }
+
+      const teamResourcesResponse = await this.ddb.batchGet(teamResourceRequest).promise();
+      const teamResources = teamResourcesResponse.Responses;
+      if (teamResources.length) return true;
+
+      Log.error('This is not a team resource', { UserId: this.props.UserId, ResourceId: item.Id! });
+      return false;
+    }
+
     const security = ((this.props.Security || {})[securityToApply]) || {};
     const fields = (security.Fields || Object.keys(item));
     
@@ -555,7 +609,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     return fields.reduce((ret, field) => ({ ...ret, [field]: (item as any)[field]}), {})
   }
 
-  private verifyItemSecurity (item: StandaloneObject): boolean {
+  private async verifyItemSecurity (item: StandaloneObject): Promise<boolean> {
     const itemOwner = item.UserId!;
 
     // TODO Manage team stuff
