@@ -18,6 +18,8 @@ export enum OperationType {
 }
 
 const INVALID_OPERATION_EXCEPTION = new Error('Invalid operation requested');
+const TeamMembershipsTableName = process.env.TEAM_MEMBERSHIPS_TABLE_NAME!;
+const TeamResourcesTableName = process.env.TEAM_RESOURCES_TABLE_NAME!;
 
 const IotEndpointAddress = process.env.IOT_ENDPOINT_ADDRESS!;
 
@@ -67,7 +69,9 @@ export const handler = async (event: FunctionEvent<any>) => {
     ListType,
     OutputFields,
     S3Fields,
-    Security
+    Security,
+    TeamMembershipsTableName,
+    TeamResourcesTableName
   });
 
   try {
