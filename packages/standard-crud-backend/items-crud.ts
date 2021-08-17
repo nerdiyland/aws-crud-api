@@ -89,7 +89,7 @@ export interface ItemsCrudProps {
 
   TeamResourcesTableName?: string;
 
-  Pivot: 'none' | {
+  Pivot?: 'none' | {
     SourceField: string;
     PivotFields: string[];
   },
