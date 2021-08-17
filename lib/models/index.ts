@@ -113,6 +113,8 @@ export interface BaseCrudApiProps {
 
   TeamMembershipsTable?: ITable;
   TeamResourcesTable?: ITable;
+
+  Pivot?: BaseCrudApiOperationPivotConfiguration;
 }
   
 export interface BaseCrudApiTableConfigurationProps {
@@ -184,4 +186,11 @@ export interface BaseCrudApiOperationSecurityConfiguration {
  */
 export interface BaseCrudApiOperationSecurityRoleConfiguration {
   Fields?: string[];
+}
+
+// Pivot tables
+export interface BaseCrudApiOperationPivotConfiguration {
+  Table: ITable;
+  SourceField: string;
+  PivotFields: string[];
 }

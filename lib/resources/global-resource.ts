@@ -211,7 +211,11 @@ export class GlobalCRUDResource extends Resource {
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
                 Security: configSource!.Security,
-                ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
+                ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none',
+                Pivot: !props.Configuration.Pivot ? 'none' : {
+                  SourceField: props.Configuration.Pivot!.SourceField,
+                  PivotFields: props.Configuration.Pivot!.PivotFields
+                }
               },
               Data: "'$input.json('$')'" // TODO
             }).split('"\'').join('').split('\'"').join('')

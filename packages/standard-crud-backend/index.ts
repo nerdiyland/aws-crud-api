@@ -23,6 +23,8 @@ const TeamResourcesTableName = process.env.TEAM_RESOURCES_TABLE_NAME!;
 
 const IotEndpointAddress = process.env.IOT_ENDPOINT_ADDRESS!;
 
+const PivotTableName = process.env.PIVOT_TABLE_NAME!;
+
 /* TODO */
 export const handler = async (event: FunctionEvent<any>) => {
   const { 
@@ -39,7 +41,8 @@ export const handler = async (event: FunctionEvent<any>) => {
     OutputFields,
     S3Fields,
     SuccessEvent,
-    Security
+    Security,
+    Pivot
   } = event.Params as any;
   
   const Data = event.Data;
@@ -71,7 +74,9 @@ export const handler = async (event: FunctionEvent<any>) => {
     S3Fields,
     Security,
     TeamMembershipsTableName,
-    TeamResourcesTableName
+    TeamResourcesTableName,
+    Pivot,
+    PivotTableName
   });
 
   try {

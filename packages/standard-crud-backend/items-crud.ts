@@ -88,6 +88,13 @@ export interface ItemsCrudProps {
   TeamMembershipsTableName?: string;
 
   TeamResourcesTableName?: string;
+
+  Pivot: 'none' | {
+    SourceField: string;
+    PivotFields: string[];
+  },
+
+  PivotTableName?: string;
 }
 
 /**
@@ -449,7 +456,49 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     // Parse field-level security
     Log.debug('Applying field-level security', { FilteredListCount: filteredItems.length });
-    let mappedItems = await Promise.all(filteredItems.map(async (item: StandaloneObject) => await this.applyFieldLevelSecurity(item)));
+    let mappedItems: any[] = await Promise.all(filteredItems.map(async (item: StandaloneObject) => await this.applyFieldLevelSecurity(item)));
+
+    // Pivot
+    if (this.props.Pivot && this.props.Pivot !== 'none') {
+      const pivot = this.props.Pivot as any;
+      Log.info('Applying pivot configuration', { Configuration: pivot });
+      const sourceKeys = mappedItems.map((item: any) => item[pivot.SourceField]);
+      
+      const chunks = [];
+      for (let i = 0; i < sourceKeys.length; i += 100) {
+        chunks.push(sourceKeys.slice(i, Math.min(i+100, sourceKeys.length)));
+      }
+
+      Log.info('Fetching pivot items');
+      const pivotResultsResponses = await Promise.all(chunks.map(async chunk => {
+        const results = await this.ddb.batchGet({
+          RequestItems: {
+            [this.props.PivotTableName!]: {
+              Keys: chunk.map(Id => ({ Id }))
+            }
+          }
+        }).promise();
+
+        const items = results.Responses[this.props.PivotTableName!];
+        return items;
+      }))
+
+      const allResponses = pivotResultsResponses.flat();
+      const pivotedItems = mappedItems.map((item: any) => {
+        const pivotItem = allResponses.find(ii => ii.Id === item[pivot.SourceField]);
+
+        return {
+          ...item,
+          ...(pivot.PivotFields.reduce((t: any, i: any) => ({
+            ...t, 
+            [i]: pivotItem[i]
+          }), {}))
+        }
+      });
+
+      // Store items
+      mappedItems = pivotedItems;
+    }
 
     // TODO Paging out
 

@@ -95,7 +95,9 @@ export class BaseCrudApi extends Construct {
         IOT_ENDPOINT_ADDRESS: IotEndpointAddress,
 
         TEAM_MEMBERSHIPS_TABLE_NAME: teamMembershipsTable.tableName,
-        TEAM_RESOURCES_TABLE_NAME: teamResourcesTable.tableName
+        TEAM_RESOURCES_TABLE_NAME: teamResourcesTable.tableName,
+
+        PIVOT_TABLE_NAME: props.Pivot ? props.Pivot!.Table.tableName : 'none'
       }
     });
 
@@ -132,6 +134,18 @@ export class BaseCrudApi extends Construct {
           teamResourcesTable.tableArn
         ]
       }));
+
+      if (props.Pivot) {
+        this.backendFunction.addToRolePolicy(new PolicyStatement({
+          actions: [
+            'dynamodb:GetItem',
+            'dynamodb:BatchGetItem'
+          ],
+          resources: [
+            props.Pivot!.Table.tableArn
+          ]
+        }))
+      }
     }
 
     // Grant function access to bucket
