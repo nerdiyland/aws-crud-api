@@ -479,13 +479,13 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
           }
         }).promise();
 
-        const items = results.Responses[this.props.PivotTableName!];
+        const items = results.Responses![this.props.PivotTableName!];
         return items;
       }))
 
       const allResponses = pivotResultsResponses.flat();
       const pivotedItems = mappedItems.map((item: any) => {
-        const pivotItem = allResponses.find(ii => ii.Id === item[pivot.SourceField]);
+        const pivotItem: any = allResponses.find(ii => ii.Id === item[pivot.SourceField])!;
 
         return {
           ...item,
