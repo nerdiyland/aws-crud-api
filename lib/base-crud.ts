@@ -27,16 +27,6 @@ export class BaseCrudApi extends Construct {
     let teamMembershipsTable: ITable | undefined = props.TeamMembershipsTable;
     let teamResourcesTable: ITable | undefined = props.TeamResourcesTable;
 
-    if (!teamMembershipsTable) {
-      const TeamMembershipsTableArn = Fn.importValue('AfterSignals::Customers::TeamMembershipsTableArn');
-      teamMembershipsTable = Table.fromTableArn(this, 'TeamMembershipsTable', TeamMembershipsTableArn);
-    }
-
-    if (!teamResourcesTable) {
-      const TeamResourcesTableArn = Fn.importValue('AfterSignals::Customers::TeamResourcesTableArn');
-      teamResourcesTable = Table.fromTableArn(this, 'TeamResourcesTable', TeamResourcesTableArn);
-    }
-
     // Initialise the API
     this.api = props.Api!;
     //  || new RestApi(this, 'RestApi', {
@@ -94,8 +84,8 @@ export class BaseCrudApi extends Construct {
         PARENT_PARAM_NAME: props.ParentResourceName ? props.ParentFieldName || 'ParentId' : 'no',
         IOT_ENDPOINT_ADDRESS: IotEndpointAddress,
 
-        TEAM_MEMBERSHIPS_TABLE_NAME: teamMembershipsTable.tableName,
-        TEAM_RESOURCES_TABLE_NAME: teamResourcesTable.tableName,
+        TEAM_MEMBERSHIPS_TABLE_NAME: teamMembershipsTable?.tableName || 'none',
+        TEAM_RESOURCES_TABLE_NAME: teamResourcesTable?.tableName || 'none',
 
         PIVOT_TABLE_NAME: props.Pivot ? props.Pivot!.Table.tableName : 'none'
       }
@@ -124,16 +114,18 @@ export class BaseCrudApi extends Construct {
         ]
       }));
 
-      this.backendFunction.addToRolePolicy(new PolicyStatement({
-        actions: [
-          'dynamodb:Query',
-          'dynamodb:BatchGetItem'
-        ],
-        resources: [
-          `${teamMembershipsTable.tableArn}/index/ByMemberId`,
-          teamResourcesTable.tableArn
-        ]
-      }));
+      if (teamMembershipsTable && teamResourcesTable) {
+        this.backendFunction.addToRolePolicy(new PolicyStatement({
+          actions: [
+            'dynamodb:Query',
+            'dynamodb:BatchGetItem'
+          ],
+          resources: [
+            `${teamMembershipsTable.tableArn}/index/ByMemberId`,
+            teamResourcesTable.tableArn
+          ]
+        }));
+      }
 
       if (props.Pivot) {
         this.backendFunction.addToRolePolicy(new PolicyStatement({
