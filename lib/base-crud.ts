@@ -21,8 +21,7 @@ export class BaseCrudApi extends Construct {
   constructor(scope: Construct, id: string, props: BaseCrudApiProps) {
     super(scope, id);
 
-    // FIXME Work on these
-    const IotEndpointAddress = props.IotEndpointAddress || Fn.importValue('AfterSignals::Core::IotEndpointAddress');
+    const IotEndpointAddress = props.IotEndpointAddress;
 
     let teamMembershipsTable: ITable | undefined = props.TeamMembershipsTable;
     let teamResourcesTable: ITable | undefined = props.TeamResourcesTable;
@@ -82,7 +81,7 @@ export class BaseCrudApi extends Construct {
         ITEMS_BUCKET_NAME: props.Bucket ? props.Bucket.bucketName : '',
         ID_PARAM_NAME: props.IdResourceName || 'Id',
         PARENT_PARAM_NAME: props.ParentResourceName ? props.ParentFieldName || 'ParentId' : 'no',
-        IOT_ENDPOINT_ADDRESS: IotEndpointAddress,
+        IOT_ENDPOINT_ADDRESS: IotEndpointAddress || 'none',
 
         TEAM_MEMBERSHIPS_TABLE_NAME: teamMembershipsTable?.tableName || 'none',
         TEAM_RESOURCES_TABLE_NAME: teamResourcesTable?.tableName || 'none',
