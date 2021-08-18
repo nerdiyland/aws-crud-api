@@ -44,6 +44,7 @@ export class BaseApi extends Construct {
           domain: AccessLogField.contextDomainName(),
           path: AccessLogField.contextPath(),
           method: AccessLogField.contextHttpMethod(),
+          responseSize: AccessLogField.contextResponseLength(),
         })),
         loggingLevel: MethodLoggingLevel.INFO, // TODO Change for production
       },
