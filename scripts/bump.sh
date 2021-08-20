@@ -7,7 +7,5 @@ lerna bootstrap
 npm rebuild && npm run prepare --if-present
 npm run build
 lerna run build
-git config --global user.email autobot@aftersignals.com
-git config --global user.name "AfterSignals Automation"
-npm version patch -m "[skip ci] publish new version"
+npm version patch -m "chore: publish new version [skip ci]"
 # npm publish
