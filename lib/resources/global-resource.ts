@@ -143,6 +143,7 @@ export class GlobalCRUDResource extends Resource {
                 EntitySchema: props.Configuration.EntitySchema,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
+                S3Fields: props.Configuration.S3Fields,
                 OutputFields: (createSource!.Response! || {}).Fields,
                 ParentId: createSource!.ParentId ? `$input.params('${createSource!.ParentId!.Param}')` : 'none',
                 Security: createSource!.Security,
