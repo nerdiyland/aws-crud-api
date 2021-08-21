@@ -248,7 +248,6 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
               Bucket: this.props.ItemsBucketName!,
               Key: key,
               Expires: 30,
-              ServerSideEncryption: 'aws:kms',
             });
 
             ret[s3Key] = signedUrl;
