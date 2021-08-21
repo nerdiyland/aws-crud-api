@@ -71,7 +71,7 @@ export class IndividualCRUDResource extends Resource {
               Params: {
                 Id: "$input.params('id')",
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
-                OperationName: 'updateItem',
+                OperationName: 'getItemById',
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
                 S3Fields: props.Configuration.S3Fields,
