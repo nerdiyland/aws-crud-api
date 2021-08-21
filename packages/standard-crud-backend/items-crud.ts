@@ -248,6 +248,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
               Bucket: this.props.ItemsBucketName!,
               Key: key,
               Expires: 30,
+              ContentType: 'text/plain;charset=UTF-8'
             });
 
             ret[s3Key] = signedUrl;
