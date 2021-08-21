@@ -211,6 +211,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     // TODO Validate model
+    Log.info('Scaffolding object');
     const schema: ExtendedJSONSchema = (this.props.InputSchema || Schemas.definitions.CreateItemRequest) as any;
     const scaffold = new Scaffold(schema, { 
       ...request, 
@@ -221,6 +222,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     // Add parentId to object
     if (this.props.ParentFieldName) {
       const parentId = this.props.ParentId!;
+      Log.debug('Configuring parent field', { ParentField: this.props.ParentFieldName, ParentId: parentId });
       Item[this.props.ParentFieldName] = parentId;
     }
 
@@ -281,6 +283,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       }
     }
 
+    Log.info('Storing object');
     await this.ddb.put({
       TableName: this.props.ItemsTableName,
       Item: finalRequest
