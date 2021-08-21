@@ -69,11 +69,12 @@ export class IndividualCRUDResource extends Resource {
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
-                [props.Configuration.IdFieldName || 'Id']: `$input.params('${props.Configuration.IdResourceName || 'id'}')`,
-                [props.Configuration.ParentFieldName!]: props.Configuration.ParentResourceName ? `$input.params('${props.Configuration.ParentResourceName}')` : undefined,
+                Id: "$input.params('id')",
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
+                OperationName: 'updateItem',
+                IdFieldName: props.Configuration.IdFieldName,
+                ParentFieldName: props.Configuration.ParentFieldName,
                 S3Fields: props.Configuration.S3Fields,
-                OperationName: 'getItemById',
                 Security: configSource.Security,
                 ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
               },
