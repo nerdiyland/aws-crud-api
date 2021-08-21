@@ -225,6 +225,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     // Manage S3 Fields
+    const ret = Item;
     let finalRequest: any = { ...Item };
     if (this.props.S3Fields) {
       const s3KeyNames = Object.keys(this.props.S3Fields!);
@@ -238,6 +239,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         // If it is raw data, then get signed url
         switch(s3KeyValue.DataFormat) {
           case 'raw':
+            Log.info('Generating signed url for field', { Field: s3Key });
           
             // Get signed url to upload raw data
             const signedUrl = await this.s3.getSignedUrlPromise('putObject', {
@@ -247,7 +249,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
               ServerSideEncryption: 'aws:kms',
             });
 
-            Item[s3Key] = signedUrl;
+            ret[s3Key] = signedUrl;
             return null;
           case 'json':
           default:
@@ -284,7 +286,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       Item: finalRequest
     }).promise();
 
-    return Item;
+    return ret;
   }
 
   /**
