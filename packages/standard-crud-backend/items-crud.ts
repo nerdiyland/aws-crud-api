@@ -225,7 +225,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     // Manage S3 Fields
-    let finalRequest: any = Item;
+    let finalRequest: any = { ...Item };
     if (this.props.S3Fields) {
       const s3KeyNames = Object.keys(this.props.S3Fields!);
       Log.info('Managing S3 fields', { fields: s3KeyNames });
@@ -233,25 +233,46 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
         const s3KeyValue = this.props.S3Fields![s3Key];
         const key = path.join(`${s3KeyValue.Prefix || ''}`, this.props.UserId, (Item as any)[this.props.IdFieldName || 'Id']!, `${s3Key}`);
-        const contents = (finalRequest as any)[s3Key];
-        if (contents !== undefined) {
-          const strContents = typeof(contents) === 'object' ? JSON.stringify(contents) : contents;
 
-          const s3Response = await this.s3.putObject({
-            Bucket: this.props.ItemsBucketName!,
-            Key: key,
-            Body: strContents,
-            // ServerSideEncryption: 'aws:kms',
-            // TODO Configure encryption and more
-          }).promise();
+        // If S3 data is an object, put it.
+        // If it is raw data, then get signed url
+        switch(s3KeyValue.DataFormat) {
+          case 'raw':
+          
+            // Get signed url to upload raw data
+            const signedUrl = await this.s3.getSignedUrlPromise('putObject', {
+              Bucket: this.props.ItemsBucketName!,
+              Key: key,
+              Expires: 30,
+              ServerSideEncryption: 'aws:kms',
+            });
 
-          return { [s3Key]: key }
+            Item[s3Key] = signedUrl;
+            return null;
+          case 'json':
+          default:
+            const contents = (finalRequest as any)[s3Key];
+            if (contents !== undefined) {
+              const strContents = typeof(contents) === 'object' ? JSON.stringify(contents) : contents;
+
+              const s3Response = await this.s3.putObject({
+                Bucket: this.props.ItemsBucketName!,
+                Key: key,
+                Body: strContents,
+                // ServerSideEncryption: 'aws:kms',
+                // TODO Configure encryption and more
+              }).promise();
+
+              return { [s3Key]: key }
+            }  
         }
         
         return {};
-      }));
+      }))
 
-      const objectReplacement = s3Keys.reduce((t, i) => ({ ...t, ...i }), {});
+      const objectReplacement = s3Keys
+        .filter(i => !!i) // Filter null keys (from raw data)
+        .reduce((t, i) => ({ ...t, ...i }), {});
       finalRequest = {
         ...finalRequest,
         ...objectReplacement
@@ -286,6 +307,8 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     (Key as any)[idField] = itemId;
+
+    // TODO Delete S3 data
 
     // Get item first
     const item = await this.getItemById(itemId, parentId);
@@ -358,22 +381,29 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       try {
         const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
           const s3KeyValue = this.props.S3Fields![s3Key];
-          const objectKey = responseItem[s3Key];
-          const contents = await this.s3.getObject({
-            Bucket: this.props.ItemsBucketName!,
-            Key: objectKey
-          }).promise();
-
-          let parsedContents = contents.Body!.toString('utf-8');
+          
           switch (s3KeyValue.DataFormat) {
+            case 'raw':
+              // Get signed URL for content
+              const key = path.join(`${s3KeyValue.Prefix || ''}`, this.props.UserId, (responseItem as any)[this.props.IdFieldName || 'Id']!, `${s3Key}`);
+              const signedUrl = await this.s3.getSignedUrlPromise('getObject', {
+                Bucket: this.props.ItemsBucketName!,
+                Key: key,
+                Expires: 3600
+              });
+
+              return { [s3Key]: signedUrl };
             case 'json':
-            case undefined:
             default:
-              parsedContents = JSON.parse(parsedContents);
-              break;
-            // TODO Allow for other data rather than just JSON
+              const objectKey = responseItem[s3Key];
+              const contents = await this.s3.getObject({
+                Bucket: this.props.ItemsBucketName!,
+                Key: objectKey
+              }).promise();
+    
+              let parsedContents = JSON.parse(contents.Body!.toString('utf-8'));
+              return { [s3Key]: parsedContents };
           }
-          return { [s3Key]: parsedContents };
         }));
 
         const replacements = s3Keys.reduce((t, i) => ({ ...t, ...i }), {});
