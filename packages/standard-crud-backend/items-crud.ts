@@ -252,7 +252,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
             });
 
             ret[s3Key] = signedUrl;
-            return { [s3Key]: `s3://${this,props.ItemsBucketName}/${key}` };
+            return { [s3Key]: `s3://${this.props.ItemsBucketName}/${key}` };
           case 'json':
           default:
             const contents = (finalRequest as any)[s3Key];
