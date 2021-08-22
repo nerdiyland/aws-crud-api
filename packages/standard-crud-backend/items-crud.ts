@@ -241,14 +241,14 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         // If it is raw data, then get signed url
         switch(s3KeyValue.DataFormat) {
           case 'raw':
-            Log.info('Generating signed url for field', { Field: s3Key });
+            Log.info('Generating signed url for field', { Field: s3Key, ContentType: s3KeyValue.ContentType });
           
             // Get signed url to upload raw data
             const signedUrl = await this.s3.getSignedUrlPromise('putObject', {
               Bucket: this.props.ItemsBucketName!,
               Key: key,
               Expires: 30,
-              ContentType: 'text/plain;charset=UTF-8'
+              ContentType: s3KeyValue.ContentType
             });
 
             ret[s3Key] = signedUrl;
