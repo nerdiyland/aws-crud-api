@@ -603,21 +603,34 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
         const s3KeyValue = this.props.S3Fields![s3Key];
         const key = path.join(`${s3KeyValue.Prefix || ''}`, this.props.UserId, itemId, `${s3Key}`);
-        const contents = (mappedRequest as any)[s3Key];
-        const strContents = typeof(contents) === 'object' ? JSON.stringify(contents) : contents;
 
-        const s3Response = await this.s3.putObject({
-          Bucket: this.props.ItemsBucketName!,
-          Key: key,
-          Body: strContents,
-          // ServerSideEncryption: 'aws:kms',
-          // TODO Configure encryption and more
-        }).promise();
+        // If S3 data is an object, put it.
+        // If it is raw data, then get signed url
+        switch(s3KeyValue.DataFormat) {
+          case 'raw':
+            Log.info('Ignoring s3Field as it\'s a raw object', { Field: s3Key });
+            return null;
+          case 'json':
+          default:
+            const contents = (mappedRequest as any)[s3Key];
+            const strContents = typeof(contents) === 'object' ? JSON.stringify(contents) : contents;
 
-        return { [s3Key]: key }
+            const s3Response = await this.s3.putObject({
+              Bucket: this.props.ItemsBucketName!,
+              Key: key,
+              Body: strContents,
+              // ServerSideEncryption: 'aws:kms',
+              // TODO Configure encryption and more
+            }).promise();
+
+            return { [s3Key]: key }
+        }
       }));
 
-      const objectReplacement = s3Keys.reduce((t, i) => ({ ...t, ...i }), {});
+      const objectReplacement = s3Keys
+        .filter(k => !!k)
+        .reduce((t, i) => ({ ...t, ...i }), {});
+        
       finalRequest = {
         ...finalRequest,
         ...objectReplacement
