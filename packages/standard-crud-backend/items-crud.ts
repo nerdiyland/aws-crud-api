@@ -342,7 +342,9 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       Log.debug('Deleting files from S3', { Files: objects });
       const s3Response = await this.s3.deleteObjects({
         Bucket: this.props.ItemsBucketName!,
-        Objects: objects
+        Delete: {
+          Objects: objects
+        }
       }).promise();
 
       Log.debug('Successfully deleted S3 files');
