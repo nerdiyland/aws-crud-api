@@ -144,7 +144,8 @@ export class BaseCrudApi extends Construct {
       this.backendFunction.addToRolePolicy(new PolicyStatement({
         actions: [
           's3:PutObject',
-          's3:GetObject'
+          's3:GetObject',
+          's3:DeleteObject'
         ],
         resources: [
           props.Bucket.bucketArn,
