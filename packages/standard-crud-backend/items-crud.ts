@@ -315,28 +315,6 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     Log.info('Removing object from storage', { Key });
 
-    // Delete S3 data
-    if (this.props.S3Fields) {
-      const s3KeyNames = Object.keys(this.props.S3Fields!);
-      Log.info('Managing S3 fields', { fields: s3KeyNames });
-
-      const objects = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
-        const s3KeyValue = this.props.S3Fields![s3Key];
-        const key = path.join(`${s3KeyValue.Prefix || ''}`, this.props.UserId, (Item as any)[this.props.IdFieldName || 'Id']!, `${s3Key}`);
-        return {
-          Key: key
-        }
-      }));
-
-      Log.debug('Deleting files from S3', { Files: objects });
-      const s3Response = await this.s3.deleteObjects({
-        Bucket: this.props.ItemsBucketName!,
-        Objects: objects
-      }).promise();
-
-      Log.debug('Successfully deleted S3 files');
-    }
-
     // Get item first
     Log.debug('Fetching item first');
     const item = await this.getItemById(itemId, parentId);
@@ -346,6 +324,28 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     const isAuthorized = await this.verifyItemSecurity(item);
     if (!isAuthorized) {
       throw ItemsCrud.UNAUTHORIZED_EXCEPTION;
+    }
+
+    // Delete S3 data
+    if (this.props.S3Fields) {
+      const s3KeyNames = Object.keys(this.props.S3Fields!);
+      Log.info('Managing S3 fields', { fields: s3KeyNames });
+
+      const objects = s3KeyNames.map((s3Key: any) => {
+        const s3KeyValue = this.props.S3Fields![s3Key];
+        const key = path.join(`${s3KeyValue.Prefix || ''}`, this.props.UserId, (item as any)[this.props.IdFieldName || 'Id']!, `${s3Key}`);
+        return {
+          Key: key
+        }
+      });
+
+      Log.debug('Deleting files from S3', { Files: objects });
+      const s3Response = await this.s3.deleteObjects({
+        Bucket: this.props.ItemsBucketName!,
+        Objects: objects
+      }).promise();
+
+      Log.debug('Successfully deleted S3 files');
     }
 
     Log.debug('Delete item request', {
