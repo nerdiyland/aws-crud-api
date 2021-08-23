@@ -313,11 +313,17 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     (Key as any)[idField] = itemId;
 
+    Log.info('Removing object from storage', { Key });
+
     // TODO Delete S3 data
+    Log.debug('TODO delete S3 data');
 
     // Get item first
+    Log.debug('Fetching item first');
     const item = await this.getItemById(itemId, parentId);
+    
     // Validate item security
+    Log.debug('Validating item security');
     const isAuthorized = await this.verifyItemSecurity(item);
     if (!isAuthorized) {
       throw ItemsCrud.UNAUTHORIZED_EXCEPTION;
@@ -630,7 +636,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       const objectReplacement = s3Keys
         .filter(k => !!k)
         .reduce((t, i) => ({ ...t, ...i }), {});
-        
+
       finalRequest = {
         ...finalRequest,
         ...objectReplacement
