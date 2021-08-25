@@ -38,7 +38,10 @@ export class BaseCrudApi extends Construct {
     //   }
     // });
 
+    const resourcePath = props.ResourcePath.replace(/[\{\\+}]/g, '')
+
     this.table = props.Table || new Table(this, 'Table', {
+      tableName: Fn.join('-', [this.api.restApiName, 'crudStorage', resourcePath]),
       removalPolicy: RemovalPolicy.DESTROY,
       billingMode: BillingMode.PAY_PER_REQUEST,
       pointInTimeRecovery: true,
@@ -69,6 +72,7 @@ export class BaseCrudApi extends Construct {
     }
 
     this.backendFunction = props.BackendFunction || new Function(this, 'BackendFunction', {
+      functionName: Fn.join('-', [this.api.restApiName, 'CrudBackend', resourcePath]),
       code: new AssetCode(`${__dirname}/../packages/standard-crud-backend`),
       handler: 'index.handler',
       runtime: Runtime.NODEJS_12_X,
