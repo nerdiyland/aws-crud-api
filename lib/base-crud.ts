@@ -75,7 +75,7 @@ export class BaseCrudApi extends Construct {
       functionName: Fn.join('-', [this.api.restApiName, 'CrudBackend', resourcePath]),
       code: new AssetCode(`${__dirname}/../packages/standard-crud-backend`),
       handler: 'index.handler',
-      runtime: Runtime.NODEJS_12_X,
+      runtime: Runtime.NODEJS_14_X,
       description: `${props.ResourcePath} - Standard backend for CRUD apis`,
       memorySize: props.BackendMemory || 1024,
       timeout: props.BackendTimeout || Duration.seconds(10),
