@@ -18,8 +18,12 @@ export enum OperationType {
 }
 
 const INVALID_OPERATION_EXCEPTION = new Error('Invalid operation requested');
+const TeamMembershipsTableName = process.env.TEAM_MEMBERSHIPS_TABLE_NAME!;
+const TeamResourcesTableName = process.env.TEAM_RESOURCES_TABLE_NAME!;
 
 const IotEndpointAddress = process.env.IOT_ENDPOINT_ADDRESS!;
+
+const PivotTableName = process.env.PIVOT_TABLE_NAME!;
 
 /* TODO */
 export const handler = async (event: FunctionEvent<any>) => {
@@ -31,11 +35,14 @@ export const handler = async (event: FunctionEvent<any>) => {
     InputSchema,
     IdFieldName,
     ParentFieldName,
+    ParentId,
     IndexName,
     ListType,
     OutputFields,
     S3Fields,
-    SuccessEvent
+    SuccessEvent,
+    Security,
+    Pivot
   } = event.Params as any;
   
   const Data = event.Data;
@@ -60,10 +67,16 @@ export const handler = async (event: FunctionEvent<any>) => {
     InputSchema: inputSchema,
     IdFieldName,
     ParentFieldName,
+    ParentId,
     IndexName,
     ListType,
     OutputFields,
     S3Fields,
+    Security,
+    TeamMembershipsTableName,
+    TeamResourcesTableName,
+    Pivot,
+    PivotTableName
   });
 
   try {

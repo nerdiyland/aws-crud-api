@@ -1,15 +1,21 @@
-import { IBucket } from '@aws-cdk/aws-s3';
-import { IResource, JsonSchema, Model, RequestValidator, RestApi } from "@aws-cdk/aws-apigateway";
-import { AttributeType, ITable } from "@aws-cdk/aws-dynamodb";
-import { IFunction } from "@aws-cdk/aws-lambda";
-import { Duration } from "@aws-cdk/core";
+import { IBucket } from 'aws-cdk-lib/aws-s3';
+import { IResource, JsonSchema, Model, RequestValidator, RestApi } from "aws-cdk-lib/aws-apigateway";
+import { AttributeType, ITable } from "aws-cdk-lib/aws-dynamodb";
+import { IFunction } from "aws-cdk-lib/aws-lambda";
+import { Duration } from "aws-cdk-lib";
 
 export interface BaseCrudApiProps {
 
   /**
+   * Iot endpoint address for the solution
+   * If none is used, an export will be tried and fetched from cloudformation
+   */
+  IotEndpointAddress?: string;
+
+  /**
    * Logical name for the component. It'd be used on outputs and other identifiers
    */
-  ComponentName: string;
+  ComponentName?: string;
   
   /**
    * Defines the path for this API resource
@@ -104,6 +110,11 @@ export interface BaseCrudApiProps {
    * This is useful when APIs handle a resource that stores large data as part of the contract
    */
   S3Fields?: { [key: string]: BaseCrudApiOperationS3FieldConfiguration }
+
+  TeamMembershipsTable?: ITable;
+  TeamResourcesTable?: ITable;
+
+  Pivot?: BaseCrudApiOperationPivotConfiguration;
 }
   
 export interface BaseCrudApiTableConfigurationProps {
@@ -129,11 +140,25 @@ export interface BaseCrudApiOperationConfiguration {
   Response?: BaseCrudApiOperationResponseConfiguration;
   BackendFunction?: IFunction;
   SuccessEvent?: string;
+  ParentId?: BaseCrudApiOperationParentConfiguration;
+  Security?: BaseCrudApiOperationSecurityConfiguration;
+}
+
+export enum BaseCrudApiParameterSource {
+  PATH = 'path',
+  QUERYSTRING = 'querystring',
+  HEADER = 'header',
+}
+
+export interface BaseCrudApiOperationParentConfiguration {
+  Param: string;
+  Source: BaseCrudApiParameterSource;
 }
 
 export interface BaseCrudApiOperationS3FieldConfiguration {
   Prefix?: string;
-  DataFormat?: 'json' | 'TODO'; // TODO Add types
+  DataFormat?: 'json' | 'raw'; // TODO Add types
+  ContentType?: string;
   // TODO Add other properties
 }
 export interface BaseCrudApiOperationResponseConfiguration {
@@ -146,4 +171,27 @@ export interface BaseCrudApiOperationResponseConfiguration {
 export interface BaseCrudApiOperationModelConfiguration {
   ModelName: string;
   Schema: JsonSchema;
+}
+
+export interface BaseCrudApiOperationSecurityConfiguration {
+  Owner?: BaseCrudApiOperationSecurityRoleConfiguration;
+
+  // TODO Add team-specific permissions for team roles
+  Team?: BaseCrudApiOperationSecurityRoleConfiguration;
+
+  Public?: BaseCrudApiOperationSecurityRoleConfiguration;
+}
+
+/**
+ * Security 
+ */
+export interface BaseCrudApiOperationSecurityRoleConfiguration {
+  Fields?: string[];
+}
+
+// Pivot tables
+export interface BaseCrudApiOperationPivotConfiguration {
+  Table: ITable;
+  SourceField: string;
+  PivotFields: string[];
 }

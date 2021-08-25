@@ -1,8 +1,8 @@
-import { Resource, Method, RequestValidator, LambdaIntegration, PassthroughBehavior, AuthorizationType, Model } from '@aws-cdk/aws-apigateway';
-import { Construct } from '@aws-cdk/core';
+import { Resource, Method, RequestValidator, LambdaIntegration, PassthroughBehavior, AuthorizationType, Model } from 'aws-cdk-lib/aws-apigateway';
+import { Construct } from 'constructs';
 import { ResourceConfiguration } from './global-resource';
-import { Function } from '@aws-cdk/aws-lambda';
-import { PolicyStatement } from '@aws-cdk/aws-iam';
+import { Function } from 'aws-cdk-lib/aws-lambda';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 
 /**
@@ -51,23 +51,32 @@ export class IndividualCRUDResource extends Resource {
 
     // Get entity by Id
     if (props.Configuration.Operations.Read) {
+      const configSource = props.Configuration.Operations.Read;
       this.getItemByIdMethod = new Method(this, 'GetItemByIdMethod', {
         httpMethod: 'GET',
         resource: this,
         integration: new LambdaIntegration(props.Configuration.BackendFunction, {
           proxy: false,
-          credentialsPassthrough: true,
+          credentialsPassthrough: false,
           requestParameters: {
-            'integration.request.path.id': 'method.request.path.id'
+            'integration.request.path.id': 'method.request.path.id',
+
+            // Add `ParentId` to integration parameters
+            ...(!configSource!.ParentId ? {} : {
+              [`integration.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`]: `method.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`
+            })
           },
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
-                [props.Configuration.IdFieldName || 'Id']: `$input.params('${props.Configuration.IdResourceName || 'id'}')`,
-                [props.Configuration.ParentFieldName!]: props.Configuration.ParentResourceName ? `$input.params('${props.Configuration.ParentResourceName}')` : undefined,
+                Id: "$input.params('id')",
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
-                S3Fields: props.Configuration.S3Fields,
                 OperationName: 'getItemById',
+                IdFieldName: props.Configuration.IdFieldName,
+                ParentFieldName: props.Configuration.ParentFieldName,
+                S3Fields: props.Configuration.S3Fields,
+                Security: configSource.Security,
+                ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
               },
             }).split('"\'').join('').split('\'"').join('')
           },
@@ -104,7 +113,12 @@ export class IndividualCRUDResource extends Resource {
           operationName: props.Configuration.Operations.Read.OperationName || 'getById',
           requestValidator: requestValidator,
           requestParameters: {
-            'method.request.path.id': true
+            'method.request.path.id': true,
+
+            // Add `ParentId` to required method parameters
+            ...(!configSource!.ParentId ? {} : {
+              [`method.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`]: true
+            })
           },
           requestModels: !props.Configuration.Operations.Read.InputModel ? undefined : {
             'application/json': props.Configuration.Operations.Read.InputModel
@@ -140,14 +154,21 @@ export class IndividualCRUDResource extends Resource {
 
     // Update entity
     if (props.Configuration.Operations.Update) {
+      const configSource = props.Configuration.Operations.Update;
+
       this.updateItemMethod = new Method(this, 'UpdateItemMethod', {
         httpMethod: 'PUT',
         resource: this,
         integration: new LambdaIntegration(props.Configuration.BackendFunction, {
           proxy: false,
-          credentialsPassthrough: true,
+          credentialsPassthrough: false,
           requestParameters: {
-            'integration.request.path.id': 'method.request.path.id'
+            'integration.request.path.id': 'method.request.path.id',
+
+            // Add `ParentId` to integration parameters
+            ...(!configSource!.ParentId ? {} : {
+              [`integration.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`]: `method.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`
+            })
           },
           requestTemplates: {
             'application/json': JSON.stringify({
@@ -158,6 +179,8 @@ export class IndividualCRUDResource extends Resource {
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
                 S3Fields: props.Configuration.S3Fields,
+                Security: configSource.Security,
+                ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
               },
               Data: "'$input.json('$')'"
             }).split('"\'').join('').split('\'"').join('')
@@ -195,7 +218,12 @@ export class IndividualCRUDResource extends Resource {
           operationName: props.Configuration.Operations.Update.OperationName || 'update',
           requestValidator: requestValidator,
           requestParameters: {
-            'method.request.path.id': true
+            'method.request.path.id': true,
+
+            // Add `ParentId` to required method parameters
+            ...(!configSource!.ParentId ? {} : {
+              [`method.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`]: true
+            })
           },
           requestModels: props.Configuration.Operations.Update!.InputModel ? {
             'application/json': props.Configuration.Operations.Update!.InputModel
@@ -231,22 +259,44 @@ export class IndividualCRUDResource extends Resource {
 
     // Delete entity
     if (props.Configuration.Operations.Delete) {
+      const configSource = props.Configuration.Operations.Delete;
+
       this.deleteItemMethod = new Method(this, 'DeleteItemMethod', {
         httpMethod: 'DELETE',
         resource: this,
         integration: new LambdaIntegration(props.Configuration.BackendFunction, {
           proxy: false,
-          credentialsPassthrough: true,
+          credentialsPassthrough: false,
           requestParameters: {
-            'integration.request.path.id': 'method.request.path.id'
+            'integration.request.path.id': 'method.request.path.id',
+
+            // Add `ParentId` to integration parameters
+            ...(!configSource!.ParentId ? {} : {
+              [`integration.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`]: `method.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`
+            })
           },
           requestTemplates: {
             'text/plain': JSON.stringify({
+              Params: {
+                Id: "$input.params('id')",
+                UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
+                OperationName: 'deleteItem',
+                IdFieldName: props.Configuration.IdFieldName,
+                ParentFieldName: props.Configuration.ParentFieldName,
+                S3Fields: props.Configuration.S3Fields,
+                Security: configSource.Security,
+                ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
+              }
+            }).split('"\'').join('').split('\'"').join(''),
+            
+            'application/json': JSON.stringify({
               Params: {
                 [props.Configuration.IdFieldName || 'Id']: `$input.params('${props.Configuration.IdResourceName || 'id'}')`,
                 [props.Configuration.ParentFieldName!]: props.Configuration.ParentResourceName ? `$input.params('${props.Configuration.ParentResourceName}')` : undefined,
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'deleteItem',
+                Security: configSource.Security,
+                ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
               }
             }).split('"\'').join('').split('\'"').join('')
           },
@@ -282,7 +332,12 @@ export class IndividualCRUDResource extends Resource {
           authorizationType: AuthorizationType.IAM,
           operationName: props.Configuration.Operations.Delete.OperationName || 'delete',
           requestParameters: {
-            'method.request.path.id': true
+            'method.request.path.id': true,
+
+            // Add `ParentId` to required method parameters
+            ...(!configSource!.ParentId ? {} : {
+              [`method.request.${configSource!.ParentId!.Source}.${configSource!.ParentId!.Param}`]: true
+            })
           },
           methodResponses: [
             {
