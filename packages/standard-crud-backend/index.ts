@@ -22,6 +22,7 @@ const TeamMembershipsTableName = process.env.TEAM_MEMBERSHIPS_TABLE_NAME!;
 const TeamResourcesTableName = process.env.TEAM_RESOURCES_TABLE_NAME!;
 
 const IotEndpointAddress = process.env.IOT_ENDPOINT_ADDRESS!;
+const EnvironmentName = process.env.AFTERSIGNALS_ENVIRONMENT_NAME!;
 
 const PivotTableName = process.env.PIVOT_TABLE_NAME!;
 
@@ -92,7 +93,13 @@ export const handler = async (event: FunctionEvent<any>) => {
           });
 
           await iotData.publish({
-            topic: join(`AfterSignals/events`, UserId, SuccessEvent),
+            topic: join(
+              'AfterSignals',
+              EnvironmentName || 'default',
+              'events', 
+              UserId, 
+              SuccessEvent
+            ),
             payload: JSON.stringify({
               Id: createResult.Id,
               UserId,

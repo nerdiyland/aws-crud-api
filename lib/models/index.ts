@@ -5,6 +5,7 @@ import { IFunction } from "aws-cdk-lib/aws-lambda";
 import { Duration } from "aws-cdk-lib";
 
 export interface BaseCrudApiProps {
+  EnvironmentName?: string;
 
   /**
    * Iot endpoint address for the solution
