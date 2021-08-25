@@ -86,7 +86,7 @@ export class BaseCrudApi extends Construct {
         ID_PARAM_NAME: props.IdResourceName || 'Id',
         PARENT_PARAM_NAME: props.ParentResourceName ? props.ParentFieldName || 'ParentId' : 'no',
         IOT_ENDPOINT_ADDRESS: IotEndpointAddress || 'none',
-        AFTERSIGNALS_ENVIRONMENT_NAME: props.EnvironmentName,
+        AFTERSIGNALS_ENVIRONMENT_NAME: props.EnvironmentName || 'default',
 
         TEAM_MEMBERSHIPS_TABLE_NAME: teamMembershipsTable?.tableName || 'none',
         TEAM_RESOURCES_TABLE_NAME: teamResourcesTable?.tableName || 'none',

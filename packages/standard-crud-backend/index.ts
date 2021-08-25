@@ -95,7 +95,7 @@ export const handler = async (event: FunctionEvent<any>) => {
           await iotData.publish({
             topic: join(
               'AfterSignals',
-              EnvironmentName || 'default',
+              EnvironmentName,
               'events', 
               UserId, 
               SuccessEvent
