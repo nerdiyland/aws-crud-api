@@ -114,7 +114,7 @@ export class BaseCrudApi extends Construct {
           'iot:Publish'
         ],
         resources: [
-          `arn:aws:iot:${Aws.REGION}:${Aws.ACCOUNT_ID}:topic/AfterSignals/events/*`
+          `arn:aws:iot:${Aws.REGION}:${Aws.ACCOUNT_ID}:topic/AfterSignals/${props.EnvironmentName!}/events/*`
         ]
       }));
 
