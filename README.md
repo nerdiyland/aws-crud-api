@@ -20,6 +20,7 @@ Once you have your API defined, is time to create your resources. A resource is 
 
 ```typescript
 const catalogOperationsCrud = new BaseCrudApi(this, 'OperationsCRUD', {
+  EnvironmentName: props.EnvironmentName,
   Api: this.api, // Link the resource with your API
   ComponentName: 'MarketplaceAPI', // TODO deprecate
   ResourcePath: 'operations', // Path to your resource
