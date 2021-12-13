@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@aftersignals/models": "file:../models",
-    "aws-cdk-lib": "^2.0.0-rc.29",
+    "aws-cdk-lib": "^2.1.0",
     "constructs": "^10.0.9"
   }
 }
