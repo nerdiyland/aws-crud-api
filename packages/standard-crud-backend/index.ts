@@ -30,7 +30,6 @@ const PivotTableName = process.env.PIVOT_TABLE_NAME!;
 export const handler = async (event: FunctionEvent<any>) => {
   const { 
     Id, 
-    UserId, 
     OperationName, 
     EntitySchema,
     InputSchema,
@@ -45,6 +44,8 @@ export const handler = async (event: FunctionEvent<any>) => {
     Security,
     Pivot
   } = event.Params as any;
+
+  let UserId = event.Params;
   
   const Data = event.Data;
   Log.debug('Event object', { event })
