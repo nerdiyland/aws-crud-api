@@ -80,6 +80,17 @@ export const handler = async (event: FunctionEvent<any>) => {
     PivotTableName
   });
 
+  if (!UserId) {
+    Log.warn('No user Id field was provided. Attempting to pick it up from request Data');
+    const userId = Data.UserId;
+    if (!userId) {
+      Log.warn('Still no user ID. Something wrong may happen.');
+      UserId = 'system'
+    } else {
+      UserId = userId;
+    }
+  }
+
   try {
     switch (OperationName) {
       case OperationType.CREATE_ITEM:
