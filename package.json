@@ -23,7 +23,7 @@
     "yarn": "^1.22.10"
   },
   "dependencies": {
-    "@aftersignals/models": "file:../models",
+    "@aftersignals/models": "0.0.412",
     "aws-cdk-lib": "^2.1.0",
     "constructs": "^10.0.9"
   }
