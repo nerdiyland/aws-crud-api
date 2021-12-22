@@ -45,7 +45,7 @@ export const handler = async (event: FunctionEvent<any>) => {
     Pivot
   } = event.Params as any;
 
-  let UserId = event.Params;
+  let UserId = event.Params.UserId!;
   
   const Data = event.Data;
   Log.debug('Event object', { event })
