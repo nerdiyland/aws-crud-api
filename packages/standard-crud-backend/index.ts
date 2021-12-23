@@ -27,7 +27,7 @@ const EnvironmentName = process.env.AFTERSIGNALS_ENVIRONMENT_NAME!;
 const PivotTableName = process.env.PIVOT_TABLE_NAME!;
 
 /* TODO */
-export const handler = async (event: FunctionEvent<any>) => {
+export const handler = async (event: FunctionEvent<any> as any) => {
   const { 
     Id, 
     OperationName, 
@@ -42,13 +42,25 @@ export const handler = async (event: FunctionEvent<any>) => {
     S3Fields,
     SuccessEvent,
     Security,
-    Pivot
+    Pivot,
+    InputUserId
   } = event.Params as any;
 
   let UserId = event.Params.UserId!;
   
   const Data = event.Data;
   Log.debug('Event object', { event })
+
+  if (!UserId || !UserId.length) {
+    Log.warn('No value for UserId was received. Maybe this is a delegated call.');
+    const contextUser = InputUserId;
+    if (contextUser) {
+      Log.info('Using delegating UserId', { UserId: contextUser });
+      UserId = contextUser;
+    } else {
+      Log.error('No UserId can be found, either signing or delegating this request');
+    }
+  }
 
   let entitySchema: ExtendedJSONSchema | undefined;
   let inputSchema: ExtendedJSONSchema | undefined;
@@ -80,17 +92,6 @@ export const handler = async (event: FunctionEvent<any>) => {
     Pivot,
     PivotTableName
   });
-
-  if (!UserId) {
-    Log.warn('No user Id field was provided. Attempting to pick it up from request Data');
-    const userId = Data.UserId;
-    if (!userId) {
-      Log.warn('Still no user ID. Something wrong may happen.');
-      UserId = 'system'
-    } else {
-      UserId = userId;
-    }
-  }
 
   try {
     switch (OperationName) {

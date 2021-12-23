@@ -70,6 +70,7 @@ export class IndividualCRUDResource extends Resource {
             'application/json': JSON.stringify({
               Params: {
                 Id: "$input.params('id')",
+                InputUserId: `$input.params('X-AFTERSIGNALS-USER-ID')`,
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'getItemById',
                 IdFieldName: props.Configuration.IdFieldName,
@@ -174,6 +175,7 @@ export class IndividualCRUDResource extends Resource {
             'application/json': JSON.stringify({
               Params: {
                 Id: "$input.params('id')",
+                InputUserId: `$input.params('X-AFTERSIGNALS-USER-ID')`,
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'updateItem',
                 IdFieldName: props.Configuration.IdFieldName,
@@ -279,6 +281,7 @@ export class IndividualCRUDResource extends Resource {
             'text/plain': JSON.stringify({
               Params: {
                 Id: "$input.params('id')",
+                InputUserId: `$input.params('X-AFTERSIGNALS-USER-ID')`,
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'deleteItem',
                 IdFieldName: props.Configuration.IdFieldName,
