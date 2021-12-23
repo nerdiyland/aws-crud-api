@@ -27,7 +27,7 @@ const EnvironmentName = process.env.AFTERSIGNALS_ENVIRONMENT_NAME!;
 const PivotTableName = process.env.PIVOT_TABLE_NAME!;
 
 /* TODO */
-export const handler = async (event: FunctionEvent<any> as any) => {
+export const handler = async (event: any) => { // (event: FunctionEvent<any> as any) => {
   const { 
     Id, 
     OperationName, 
