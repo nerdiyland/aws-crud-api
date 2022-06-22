@@ -497,7 +497,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       let lastPageKey = undefined;
       
       do {
-        const queryItems = await this.ddb.query({
+        const queryItems: QueryOutput = await this.ddb.query({
           TableName: this.props.ItemsTableName,
           IndexName: this.props.IndexName,
           KeyConditionExpression: '#parentId = :parentId',
@@ -518,7 +518,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       } while (!!lastPageKey);
     } else {
       Log.info('Scanning items');
-      const scanItems = await this.ddb.scan({
+      const scanItems: ScanOutput = await this.ddb.scan({
         TableName: this.props.ItemsTableName
       }).promise();
 
