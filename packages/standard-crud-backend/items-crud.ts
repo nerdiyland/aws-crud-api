@@ -457,24 +457,35 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
    */
   async listItems (request?: ListItemsRequest<L>): Promise<ListItemsResponse<R>> {
     
-    // TODO Paging in
+    // Paging results
+    // XXX For now paging just works automatically, and all pages are retrieved when fetching owned or parent items.
 
-    let items: QueryOutput | ScanOutput;
+    let items: any[] = [];
     if (this.props.ListType === 'owned') {
       Log.info('Fetching owned items', { UserId: this.props.UserId, IndexName: this.props.IndexName, });
-      items = await this.ddb.query({
-        TableName: this.props.ItemsTableName,
-        IndexName: this.props.IndexName,
-        KeyConditionExpression: '#userId = :userId',
-        ExpressionAttributeNames: {
-          '#userId': this.props.ParentFieldName || 'UserId'
-        },
-        ExpressionAttributeValues: {
-          ':userId': this.props.UserId
+      let lastPageKey = undefined;
+
+      do {
+        const queryItems: QueryOutput = await this.ddb.query({
+          TableName: this.props.ItemsTableName,
+          IndexName: this.props.IndexName,
+          KeyConditionExpression: '#userId = :userId',
+          ExpressionAttributeNames: {
+            '#userId': this.props.ParentFieldName || 'UserId'
+          },
+          ExpressionAttributeValues: {
+            ':userId': this.props.UserId
+          },
+          ExclusiveStartKey: lastPageKey
+        }).promise();
+
+        items = items.concat(queryItems.Items!);
+
+        lastPageKey = queryItems.LastEvaluatedKey;
+        if (lastPageKey) {
+          Log.debug('There are more results to fetch', { LastItem: lastPageKey });
         }
-      }).promise();
-      
-      
+      } while (!!lastPageKey);
     }
     else if (this.props.ParentFieldName !== undefined) {
       Log.info('Fetching items by ParentId', { 
@@ -482,36 +493,49 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         ParentIdField: this.props.ParentFieldName,
         IndexName: this.props.IndexName,
       });
+
+      let lastPageKey = undefined;
       
-      items = await this.ddb.query({
-        TableName: this.props.ItemsTableName,
-        IndexName: this.props.IndexName,
-        KeyConditionExpression: '#parentId = :parentId',
-        ExpressionAttributeNames: {
-          '#parentId': this.props.ParentFieldName!
-        },
-        ExpressionAttributeValues: {
-          ':parentId': this.props.ParentId
+      do {
+        const queryItems = await this.ddb.query({
+          TableName: this.props.ItemsTableName,
+          IndexName: this.props.IndexName,
+          KeyConditionExpression: '#parentId = :parentId',
+          ExpressionAttributeNames: {
+            '#parentId': this.props.ParentFieldName!
+          },
+          ExpressionAttributeValues: {
+            ':parentId': this.props.ParentId
+          },
+          ExclusiveStartKey: lastPageKey
+        }).promise();
+
+        items = items.concat(queryItems.Items!);
+        lastPageKey = queryItems.LastEvaluatedKey;
+        if (lastPageKey) {
+          Log.debug('There are more results to fetch', { LastItem: lastPageKey });
         }
-      }).promise();
+      } while (!!lastPageKey);
     } else {
       Log.info('Scanning items');
-      items = await this.ddb.scan({
+      const scanItems = await this.ddb.scan({
         TableName: this.props.ItemsTableName
       }).promise();
+
+      items = items.concat(scanItems.Items!);
     }
 
     // Manage operation security
-    Log.debug('Managing item security', { OriginalListCount: items.Items!.length })
+    Log.debug('Managing item security', { OriginalListCount: items.length })
     let filteredItems = [];
     switch (this.props.ListType) {
       case 'owned':
-        filteredItems = items.Items!;
+        filteredItems = items;
         // Security here is handled by default. Only owned items will be fetched.
         break;
       default:
         // Filter items by security configuration
-        filteredItems = await Promise.all(items.Items!.filter(async (item: StandaloneObject) => await this.verifyItemSecurity(item)));
+        filteredItems = await Promise.all(items.filter(async (item: StandaloneObject) => await this.verifyItemSecurity(item)));
     }
 
     // Parse field-level security
