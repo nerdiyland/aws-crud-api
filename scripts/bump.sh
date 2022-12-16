@@ -7,5 +7,5 @@ lerna bootstrap
 npm rebuild && npm run prepare --if-present
 npm run build
 lerna run build
-npm version patch -m "chore: publish new version [skip ci]"
+npm version patch -s -m "chore: publish new version [skip ci]"
 # npm publish
