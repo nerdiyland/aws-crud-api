@@ -69,6 +69,7 @@ export class IndividualCRUDResource extends Resource {
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
+                ...(props.Configuration.AdditionalParams || {}),
                 Id: "$input.params('id')",
                 InputUserId: `$input.params('X-AFTERSIGNALS-USER-ID')`,
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
@@ -174,6 +175,7 @@ export class IndividualCRUDResource extends Resource {
           requestTemplates: {
             'application/json': JSON.stringify({
               Params: {
+                ...(props.Configuration.AdditionalParams || {}),
                 Id: "$input.params('id')",
                 InputUserId: `$input.params('X-AFTERSIGNALS-USER-ID')`,
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
@@ -280,6 +282,7 @@ export class IndividualCRUDResource extends Resource {
           requestTemplates: {
             'text/plain': JSON.stringify({
               Params: {
+                ...(props.Configuration.AdditionalParams || {}),
                 Id: "$input.params('id')",
                 InputUserId: `$input.params('X-AFTERSIGNALS-USER-ID')`,
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',

@@ -116,6 +116,12 @@ export interface BaseCrudApiProps {
   TeamResourcesTable?: ITable;
 
   Pivot?: BaseCrudApiOperationPivotConfiguration;
+
+  /**
+   * Additional parameters to retrieve from the API call.
+   * Use AWS API Gateway vtl transforms for it
+   */
+  AdditionalParams?: { [key: string]: string };
 }
   
 export interface BaseCrudApiTableConfigurationProps {
