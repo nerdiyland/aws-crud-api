@@ -411,6 +411,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       try {
         const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
           const s3KeyValue = this.props.S3Fields![s3Key];
+          Log.debug('Managing S3 field', { Key: s3Key, Configuration: s3KeyValue });
           
           switch (s3KeyValue.DataFormat) {
             case 'raw':
@@ -442,6 +443,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
           ...replacements
         }
       } catch (e) {
+        Log.error('Failed to process S3 fields', { Error: e });
         // TODO DElete this shit
       }
     }
