@@ -427,6 +427,10 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
             case 'json':
             default:
               const objectKey = responseItem[s3Key];
+              if (!objectKey) {
+                return { [s3Key]: undefined };
+              } 
+
               const contents = await this.s3.getObject({
                 Bucket: this.props.ItemsBucketName!,
                 Key: objectKey
