@@ -1,5 +1,5 @@
 import { TeamMember, TeamResource } from '@aftersignals/models/customers';
-import { BaseCrudApiOperationSecurityConfiguration } from './../../lib/models/index';
+import { BaseCrudApiOperationSecurityConfiguration } from './models';
 import { DocumentClient, QueryOutput, ScanOutput } from 'aws-sdk/clients/dynamodb';
 import S3 from 'aws-sdk/clients/s3';
 import { v4 as uuid } from 'uuid';
@@ -316,7 +316,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     Log.info('Removing object from storage', { Key });
 
     // Get item first
-    Log.debug('Fetching item first');
+    Log.debug('Fetching item first', { ItemId: itemId, ParentId: parentId });
     const item = await this.getItemById(itemId, parentId);
     
     // Validate item security
@@ -705,7 +705,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     return await this.getItemById(itemId, parentId);
   }
 
-  private async applyFieldLevelSecurity (item: StandaloneObject) {
+  async applyFieldLevelSecurity (item: StandaloneObject) {
     const itemOwner = item.UserId!;
 
     // TODO Manage team stuff
@@ -718,7 +718,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     return fields.reduce((ret, field) => ({ ...ret, [field]: (item as any)[field]}), {})
   }
 
-  private async verifyItemSecurity (item: StandaloneObject): Promise<boolean> {
+  async verifyItemSecurity (item: StandaloneObject): Promise<boolean> {
     const itemOwner = item.UserId!;
 
     // TODO Manage team stuff

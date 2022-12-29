@@ -297,10 +297,14 @@ export class IndividualCRUDResource extends Resource {
             
             'application/json': JSON.stringify({
               Params: {
-                [props.Configuration.IdFieldName || 'Id']: `$input.params('${props.Configuration.IdResourceName || 'id'}')`,
-                [props.Configuration.ParentFieldName!]: props.Configuration.ParentResourceName ? `$input.params('${props.Configuration.ParentResourceName}')` : undefined,
+                ...(props.Configuration.AdditionalParams || {}),
+                Id: "$input.params('id')",
+                InputUserId: `$input.params('X-AFTERSIGNALS-USER-ID')`,
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'deleteItem',
+                IdFieldName: props.Configuration.IdFieldName,
+                ParentFieldName: props.Configuration.ParentFieldName,
+                S3Fields: props.Configuration.S3Fields,
                 Security: configSource.Security,
                 ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
               }

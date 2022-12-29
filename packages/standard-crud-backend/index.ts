@@ -176,7 +176,7 @@ export const handler = async (event: any) => { // (event: FunctionEvent<any> as 
         Log.error('Unknown operation requested', { OperationName });
         throw INVALID_OPERATION_EXCEPTION;
     }
-  } catch (e) {
+  } catch (e: any) {
     Log.error(e);
 
     if (e === ItemsCrud.ITEM_NOT_FOUND_EXCEPTION) {
