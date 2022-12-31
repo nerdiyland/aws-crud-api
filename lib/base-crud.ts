@@ -28,15 +28,6 @@ export class BaseCrudApi extends Construct {
 
     // Initialise the API
     this.api = props.Api!;
-    //  || new RestApi(this, 'RestApi', {
-    //   restApiName: props.ComponentName,
-    //   defaultCorsPreflightOptions: {
-    //     allowOrigins: ['*'],
-    //     allowCredentials: true,
-    //     allowHeaders: ['*'],
-    //     allowMethods: ['*'],
-    //   }
-    // });
 
     const resourcePath = props.ResourcePath.replace(/[\{\\+}]/g, '')
 
