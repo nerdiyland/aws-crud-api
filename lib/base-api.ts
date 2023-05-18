@@ -24,6 +24,7 @@ export class BaseApi extends Construct {
     // Create API
     this.api = new RestApi(this, 'RestApi', {
       restApiName: props.ApiName,
+      cloudWatchRole: true,
       defaultCorsPreflightOptions: {
         allowOrigins: ['*'],
         allowCredentials: true,
