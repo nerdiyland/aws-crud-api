@@ -427,11 +427,12 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
           const s3KeyValue = this.props.S3Fields![s3Key];
           Log.debug('Managing S3 field', { Key: s3Key, Configuration: s3KeyValue });
+          const dataOwner = this.props.OwnerFieldName ? responseItem[this.props.OwnerFieldName] : responseItem.UserId!;
           
           switch (s3KeyValue.DataFormat) {
             case 'raw':
               // Get signed URL for content
-              const key = path.join(`${s3KeyValue.Prefix || ''}`, responseItem.UserId, (responseItem as any)[this.props.IdFieldName || 'Id']!, `${s3Key}`);
+              const key = path.join(`${s3KeyValue.Prefix || ''}`, dataOwner, (responseItem as any)[this.props.IdFieldName || 'Id']!, `${s3Key}`);
               const signedUrl = await this.s3.getSignedUrlPromise('getObject', {
                 Bucket: this.props.ItemsBucketName!,
                 Key: key,
