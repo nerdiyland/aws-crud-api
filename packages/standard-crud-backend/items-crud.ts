@@ -95,6 +95,11 @@ export interface ItemsCrudProps {
   },
 
   PivotTableName?: string;
+
+  /**
+   * If set to true, entity scaffolding will not be done
+   */
+  NoScaffolding?: boolean;
 }
 
 /**
@@ -203,21 +208,26 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       throw ItemsCrud.INVALID_REQUEST_OBJECT;
     }
 
-    // If an ID is given, update instead
-    const requestId = (request as any)[this.props.IdFieldName || 'Id'];
-    if (!!requestId) {
-      Log.warn('Requested Creation, but this is actually an update. Redirecting')
-      return await this.updateItem(requestId, request as any) as any;
+    let Item: any = request;
+    if (this.props.NoScaffolding === true) {
+      Log.info('Ignoring scaffolding as per request');
+    } else {
+      // If an ID is given, update instead
+      const requestId = (request as any)[this.props.IdFieldName || 'Id'];
+      if (!!requestId) {
+        Log.warn('Requested Creation, but this is actually an update. Redirecting')
+        return await this.updateItem(requestId, request as any) as any;
+      }
+  
+      // TODO Validate model
+      Log.info('Scaffolding object');
+      const schema: ExtendedJSONSchema = (this.props.InputSchema || Schemas.definitions.CreateItemRequest) as any;
+      const scaffold = new Scaffold(schema, { 
+        ...request, 
+        UserId: this.props.UserId
+      });
+      Item = scaffold.data;
     }
-
-    // TODO Validate model
-    Log.info('Scaffolding object');
-    const schema: ExtendedJSONSchema = (this.props.InputSchema || Schemas.definitions.CreateItemRequest) as any;
-    const scaffold = new Scaffold(schema, { 
-      ...request, 
-      UserId: this.props.UserId
-    });
-    const Item: any = scaffold.data;
 
     // Add parentId to object
     if (this.props.ParentFieldName) {
