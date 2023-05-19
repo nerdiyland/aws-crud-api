@@ -51,6 +51,11 @@ export interface BaseCrudApiProps {
   ParentFieldName?: string;
 
   /**
+   * Optional name for the field that stores the data owner. UserId is used by default
+   */
+  OwnerFieldName?: string;
+
+  /**
    * Optional name for the {id} field in the api resource. By default it's set to `id`
    */
   IdResourceName?: string; 

@@ -146,6 +146,7 @@ export class GlobalCRUDResource extends Resource {
                 EntitySchema: props.Configuration.EntitySchema,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
+                OwnerFieldName: props.Configuration.OwnerFieldName,
                 S3Fields: props.Configuration.S3Fields,
                 OutputFields: (createSource!.Response! || {}).Fields,
                 ParentId: createSource!.ParentId ? `$input.params('${createSource!.ParentId!.Param}')` : 'none',
@@ -216,6 +217,7 @@ export class GlobalCRUDResource extends Resource {
                 EntitySchema: props.Configuration.EntitySchema,
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
+                OwnerFieldName: props.Configuration.OwnerFieldName,
                 Security: configSource!.Security,
                 ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none',
                 Pivot: !props.Configuration.Pivot ? 'none' : {
