@@ -43,7 +43,8 @@ export const handler = async (event: any) => { // (event: FunctionEvent<any> as 
     SuccessEvent,
     Security,
     Pivot,
-    InputUserId
+    InputUserId,
+    NoScaffolding
   } = event.Params as any;
 
   let UserId = event.Params.UserId!;
@@ -90,7 +91,8 @@ export const handler = async (event: any) => { // (event: FunctionEvent<any> as 
     TeamMembershipsTableName,
     TeamResourcesTableName,
     Pivot,
-    PivotTableName
+    PivotTableName,
+    NoScaffolding
   });
 
   try {

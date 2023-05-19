@@ -122,6 +122,9 @@ export interface BaseCrudApiProps {
    * Use AWS API Gateway vtl transforms for it
    */
   AdditionalParams?: { [key: string]: string };
+
+  // Avoid scaffolding
+  NoScaffolding?: boolean;
 }
   
 export interface BaseCrudApiTableConfigurationProps {
