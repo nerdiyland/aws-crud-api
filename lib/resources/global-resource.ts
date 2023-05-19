@@ -139,6 +139,7 @@ export class GlobalCRUDResource extends Resource {
             'application/json': JSON.stringify({
               Params: {
                 ...(props.Configuration.AdditionalParams || {}),
+                NoScaffolding: props.Configuration.NoScaffolding,
                 InputUserId: `$input.params('X-AFTERSIGNALS-USER-ID')`,
                 UserId: props.Configuration.UserId || '$context.identity.cognitoIdentityId',
                 OperationName: 'createItem',
