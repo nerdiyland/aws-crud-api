@@ -55,6 +55,11 @@ export interface ItemsCrudProps {
   ParentFieldName?: string;
 
   /**
+   * Field for data owner
+   */
+  OwnerFieldName?: string;
+
+  /**
    * Schema used by `create` operations to define the required initial data
    */
   InputSchema?: ExtendedJSONSchema;
@@ -735,7 +740,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
   }
 
   async verifyItemSecurity (item: StandaloneObject): Promise<boolean> {
-    const itemOwner = item.UserId!;
+    const itemOwner = this.props.OwnerFieldName ? (item as any)[this.props.OwnerFieldName] : item.UserId!;
 
     // TODO Manage team stuff
     let securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
