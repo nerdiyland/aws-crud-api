@@ -744,6 +744,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
   async verifyItemSecurity (item: StandaloneObject): Promise<boolean> {
     const itemOwner = this.props.OwnerFieldName ? (item as any)[this.props.OwnerFieldName] : item.UserId!;
+    Log.info('Verifying item security', { userId: this.props.UserId, ownerId: itemOwner });
 
     // TODO Manage team stuff
     let securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';

@@ -307,6 +307,7 @@ export class IndividualCRUDResource extends Resource {
                 OperationName: 'deleteItem',
                 IdFieldName: props.Configuration.IdFieldName,
                 ParentFieldName: props.Configuration.ParentFieldName,
+                OwnerFieldName: props.Configuration.OwnerFieldName,
                 S3Fields: props.Configuration.S3Fields,
                 Security: configSource.Security,
                 ParentId: configSource!.ParentId ? `$input.params('${configSource!.ParentId!.Param}')` : 'none'
