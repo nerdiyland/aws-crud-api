@@ -407,6 +407,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }).promise();
 
     if (!response.Item) {
+      Log.info('Item was not found', { Key });
       throw ItemsCrud.ITEM_NOT_FOUND_EXCEPTION;
     }
 
@@ -415,6 +416,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     let responseItem = response.Item!;
     const isAuthorizedForItem = await this.verifyItemSecurity(responseItem);
     if (!isAuthorizedForItem) {
+      Log.info('User is not authorized to access item', { Key });
       throw ItemsCrud.ITEM_NOT_FOUND_EXCEPTION;
     }
 
