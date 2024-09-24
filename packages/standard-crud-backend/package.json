@@ -17,7 +17,6 @@
     "@types/node": "^15.12.2",
     "@types/sinon": "^10.0.2",
     "@types/uuid": "^8.3.0",
-    "aws-sdk": "^2.1691.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "mocha": "^8.2.1",
@@ -30,6 +29,7 @@
   "dependencies": {
     "@aftersignals/models": "^0.0.346",
     "@dazn/lambda-powertools-logger": "^1.24.1",
+    "aws-sdk": "^2.1691.0",
     "moment": "^2.29.1",
     "uuid": "^8.3.1"
   },
