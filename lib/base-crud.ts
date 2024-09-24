@@ -65,21 +65,21 @@ export class BaseCrudApi extends Construct {
     this.backendFunction = props.BackendFunction || new Function(this, 'BackendFunction', {
       functionName: Fn.join('-', [this.api.restApiName, 'CrudBackend', resourcePath]),
       code: new AssetCode(`${__dirname}/../packages/standard-crud-backend`, {
-        bundling: {
-          image: Runtime.NODEJS_18_X.bundlingImage,
-          command: [
-            'bash', '-c', [
-              `cp -R /asset-input/* /asset-output/`,
-              `cd /asset-output`,
-              `npm run build`
-            ].join(' && ')
-          ],
-          user: 'root',
-          volumes: [{
-            containerPath: '/root',
-            hostPath: process.env.HOME!
-          }]
-        }
+        // bundling: {
+        //   image: Runtime.NODEJS_18_X.bundlingImage,
+        //   command: [
+        //     'bash', '-c', [
+        //       `cp -R /asset-input/* /asset-output/`,
+        //       `cd /asset-output`,
+        //       `npm run build`
+        //     ].join(' && ')
+        //   ],
+        //   user: 'root',
+        //   volumes: [{
+        //     containerPath: '/root',
+        //     hostPath: process.env.HOME!
+        //   }]
+        // }
       }),
       handler: 'index.handler',
       runtime: Runtime.NODEJS_18_X,
