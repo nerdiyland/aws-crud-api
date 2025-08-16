@@ -1,0 +1,186 @@
+name: Auto-Publish on CDK Updates
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+    inputs:
+      force_publish:
+        description: 'Force publish current version'
+        required: false
+        default: 'false'
+
+jobs:
+  detect-cdk-update:
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.check.outputs.should_publish }}
+      new_version: ${{ steps.check.outputs.new_version }}
+      cdk_version: ${{ steps.check.outputs.cdk_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Check if CDK version changed
+        id: check
+        run: |
+          # Get current CDK version from package.json
+          CURRENT_CDK_VERSION=$(node -p "require('./package.json').peerDependencies['aws-cdk-lib']" | sed 's/[\^~]//g')
+          echo "Current CDK version: $CURRENT_CDK_VERSION"
+          
+          # Get current package version
+          CURRENT_PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "Current package version: $CURRENT_PKG_VERSION"
+          
+          # Check if this is a dependabot CDK update
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+          
+          # Determine if we should publish
+          SHOULD_PUBLISH="false"
+          NEW_VERSION=""
+          
+          if [[ "$COMMIT_MSG" == *"chore(deps)"* && ("$COMMIT_MSG" == *"aws-cdk-lib"* || "$COMMIT_MSG" == *"constructs"*) ]]; then
+            echo "CDK dependency update detected"
+            # Extract major.minor.patch from CDK version
+            CDK_BASE_VERSION=$(echo $CURRENT_CDK_VERSION | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+            NEW_VERSION="$CDK_BASE_VERSION"
+            echo "New version will be: $NEW_VERSION"
+            
+            # Check if version is different from current package version
+            if [[ "$NEW_VERSION" != "$CURRENT_PKG_VERSION" ]]; then
+              SHOULD_PUBLISH="true"
+            else
+              echo "Version already matches, no publish needed"
+            fi
+          elif [[ "${{ github.event.inputs.force_publish }}" == "true" ]]; then
+            echo "Force publish requested"
+            SHOULD_PUBLISH="true"
+            NEW_VERSION="$CURRENT_PKG_VERSION"
+          else
+            echo "No CDK update detected, skipping publish"
+          fi
+          
+          echo "should_publish=$SHOULD_PUBLISH" >> $GITHUB_OUTPUT
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "cdk_version=$CURRENT_CDK_VERSION" >> $GITHUB_OUTPUT
+
+  publish:
+    needs: detect-cdk-update
+    if: needs.detect-cdk-update.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Update package version
+        run: |
+          NEW_VERSION="${{ needs.detect-cdk-update.outputs.new_version }}"
+          echo "Updating package version to $NEW_VERSION"
+          
+          # Update package.json version
+          npm version $NEW_VERSION --no-git-tag-version
+          
+          # Verify the version was updated
+          UPDATED_VERSION=$(node -p "require('./package.json').version")
+          echo "Updated version: $UPDATED_VERSION"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+      - name: Update CHANGELOG
+        run: |
+          NEW_VERSION="${{ needs.detect-cdk-update.outputs.new_version }}"
+          CDK_VERSION="${{ needs.detect-cdk-update.outputs.cdk_version }}"
+          TODAY=$(date +%Y-%m-%d)
+          
+          # Create temporary changelog entry
+          cat > /tmp/changelog_entry.md << EOF
+          ## [${NEW_VERSION}] - ${TODAY}
+
+          ### Updated
+          - Updated to AWS CDK ${CDK_VERSION}
+          - Automatic version synchronization with CDK release
+
+          EOF
+          
+          # Insert the new entry after the "## [Unreleased]" section
+          sed -i '/## \[Unreleased\]/r /tmp/changelog_entry.md' CHANGELOG.md
+          
+          echo "Updated CHANGELOG.md with version $NEW_VERSION"
+
+      - name: Commit version updates
+        run: |
+          NEW_VERSION="${{ needs.detect-cdk-update.outputs.new_version }}"
+          git add package.json package-lock.json CHANGELOG.md
+          git commit -m "chore: bump version to $NEW_VERSION (CDK ${{ needs.detect-cdk-update.outputs.cdk_version }})"
+          git push origin main
+
+      - name: Publish to NPM
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISHING_TOKEN }}
+
+      - name: Create Git Tag
+        run: |
+          NEW_VERSION="${{ needs.detect-cdk-update.outputs.new_version }}"
+          git tag "v$NEW_VERSION"
+          git push origin "v$NEW_VERSION"
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ needs.detect-cdk-update.outputs.new_version }}
+          release_name: Release v${{ needs.detect-cdk-update.outputs.new_version }}
+          body: |
+            ## AWS CDK Version Sync Release
+            
+            This release updates the package to be compatible with AWS CDK v${{ needs.detect-cdk-update.outputs.cdk_version }}.
+            
+            ### Changes
+            - Updated `aws-cdk-lib` peer dependency to v${{ needs.detect-cdk-update.outputs.cdk_version }}
+            - Automatic version synchronization: package v${{ needs.detect-cdk-update.outputs.new_version }} ↔ CDK v${{ needs.detect-cdk-update.outputs.cdk_version }}
+            
+            ### Installation
+            ```bash
+            npm install @nerdiyland/aws-crud-api-rest@${{ needs.detect-cdk-update.outputs.new_version }}
+            ```
+            
+            ### CDK Compatibility
+            This version is compatible with AWS CDK v${{ needs.detect-cdk-update.outputs.cdk_version }}.
+          draft: false
+          prerelease: false

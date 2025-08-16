@@ -1,0 +1,15 @@
+*.js
+!jest.config.js
+*.d.ts
+*.map
+node_modules
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
+# Parcel default cache directory
+.parcel-cache
+dist
+
+!commitlint.config.js
