@@ -15,9 +15,32 @@ This package follows a synchronized versioning approach with AWS CDK:
 ## [Unreleased]
 
 ### Added
-- Initial open source release
-- Comprehensive documentation and examples
-- TypeScript support with full type definitions
+- Full automation pipeline for CDK version synchronization
+- Dependabot configuration for automated CDK updates
+- GitHub Actions workflows for CI/CD and publishing
+
+## [2.159.1] - 2024-08-16
+
+### Added
+- **Automated Publishing Pipeline**: Complete automation for CDK version synchronization
+- **Dependabot Integration**: Automatic monitoring and updating of CDK dependencies
+- **GitHub Actions Workflows**: CI, auto-publishing, and auto-merge automation
+- **Version Parity System**: Package versions now match CDK versions exactly
+- **Zero-Maintenance Updates**: Fully automated CDK updates and npm publishing
+
+### Infrastructure
+- `.github/dependabot.yml`: Monitors aws-cdk-lib and constructs daily
+- `.github/workflows/auto-publish.yml`: Automated publishing on CDK updates  
+- `.github/workflows/auto-merge-dependabot.yml`: Auto-merge CDK dependency PRs
+- `.github/workflows/ci.yml`: Continuous integration testing
+
+### Automation Features
+- **CDK Version Detection**: Automatically detects CDK version changes
+- **Version Synchronization**: Updates package version to match CDK version
+- **Automated Changelog**: Updates changelog with each CDK release
+- **NPM Publishing**: Publishes to npm with CDK-matched version numbers
+- **GitHub Releases**: Creates tagged releases with release notes
+- **Auto-merge**: Merges CDK dependency updates after CI passes
 
 ## [1.0.0] - 2024-08-16
 

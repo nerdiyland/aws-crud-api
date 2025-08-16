@@ -1,11 +1,68 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-
 version: 2
 updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  # Monitor CDK dependencies for automated version updates
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
       interval: "daily"
+      time: "09:00"
+      timezone: "UTC"
+    target-branch: "main"
+    open-pull-requests-limit: 5
+    allow:
+      # Only monitor CDK-related packages for automated updates
+      - dependency-name: "aws-cdk-lib"
+      - dependency-name: "constructs"
+    # Auto-merge configuration for CDK updates
+    auto-merge:
+      enabled: true
+      merge-method: "merge"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    reviewers:
+      - "nerdiyland"
+    assignees:
+      - "nerdiyland"
+    labels:
+      - "dependencies"
+      - "cdk-update"
+      - "auto-merge"
+
+  # Monitor backend package dependencies separately (manual review)
+  - package-ecosystem: "npm"
+    directory: "/packages/standard-crud-backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    target-branch: "main"
+    open-pull-requests-limit: 3
+    # No auto-merge for backend dependencies - manual review required
+    commit-message:
+      prefix: "chore(backend-deps)"
+      include: "scope"
+    reviewers:
+      - "nerdiyland"
+    labels:
+      - "dependencies"
+      - "backend"
+
+  # Monitor GitHub Actions versions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+      timezone: "UTC"
+    target-branch: "main"
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "chore(actions)"
+    reviewers:
+      - "nerdiyland"
+    labels:
+      - "dependencies"
+      - "github-actions"
