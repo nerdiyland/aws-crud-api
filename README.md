@@ -14,7 +14,9 @@ A powerful AWS CDK construct that enables you to create fully-featured CRUD APIs
 
 ## Architecture
 
-![Base Crud Architecture](static/base-crud.png)
+<p align="center">
+  <img src="static/base-crud.png" alt="Project's architecture" />
+</p>
 
 The construct creates a REST API using Amazon API Gateway with Lambda functions for CRUD operations. Data is stored in DynamoDB with optional S3 integration for large objects. The architecture supports:
 
