@@ -54,7 +54,7 @@
     "chai-as-promised": "^7.1.1",
     "mocha": "^8.2.1",
     "nyc": "^15.1.0",
-    "sinon": "^9.2.1",
+    "sinon": "^21.0.0",
     "ts-node": "^10.9.0",
     "typescript": "^5.5.4"
   },
