@@ -93,7 +93,7 @@ export class BaseCrudApi extends Construct {
         ID_PARAM_NAME: props.IdResourceName || 'Id',
         PARENT_PARAM_NAME: props.ParentResourceName ? props.ParentFieldName || 'ParentId' : 'no',
         IOT_ENDPOINT_ADDRESS: IotEndpointAddress || 'none',
-        AFTERSIGNALS_ENVIRONMENT_NAME: props.EnvironmentName || 'default',
+        ENVIRONMENT_NAME: props.EnvironmentName || 'default',
 
         TEAM_MEMBERSHIPS_TABLE_NAME: teamMembershipsTable?.tableName || 'none',
         TEAM_RESOURCES_TABLE_NAME: teamResourcesTable?.tableName || 'none',
@@ -121,7 +121,7 @@ export class BaseCrudApi extends Construct {
           'iot:Publish'
         ],
         resources: [
-          `arn:aws:iot:${Aws.REGION}:${Aws.ACCOUNT_ID}:topic/AfterSignals/${props.EnvironmentName!}/events/*`
+          `arn:aws:iot:${Aws.REGION}:${Aws.ACCOUNT_ID}:topic/${props.EnvironmentName!}/events/*`
         ]
       }));
 
@@ -190,8 +190,8 @@ export class BaseCrudApi extends Construct {
       Validator: props.Validator
     });
 
-    new CfnOutput(this, 'AfterSignals::ComponentName', { value: this.api.restApiName });
-    new CfnOutput(this, 'AfterSignals::ComponentType', { value: 'rest' });
-    new CfnOutput(this, 'AfterSignals::EntryPoint', { value: this.api.url });
+    new CfnOutput(this, 'ComponentName', { value: this.api.restApiName });
+    new CfnOutput(this, 'ComponentType', { value: 'rest' });
+    new CfnOutput(this, 'EntryPoint', { value: this.api.url });
   }
 }

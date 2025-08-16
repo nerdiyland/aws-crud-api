@@ -1,17 +1,12 @@
-import { TeamMember, TeamResource } from '@aftersignals/models/customers';
 import { BaseCrudApiOperationSecurityConfiguration } from './models';
 import { DocumentClient, QueryOutput, ScanOutput } from 'aws-sdk/clients/dynamodb';
 import S3 from 'aws-sdk/clients/s3';
-import { v4 as uuid } from 'uuid';
-import moment from 'moment';
-import { StandaloneObject } from '@aftersignals/models/base/StandaloneObject';
-import { CreateItemRequest } from '@aftersignals/models/apis/base/contracts/CreateItemRequest'
-import { ListItemsRequest } from '@aftersignals/models/apis/base/contracts/ListItemsRequest'
-import { ListItemsResponse } from '@aftersignals/models/apis/base/contracts/ListItemsResponse'
-import { ExtendedJSONSchema } from '@aftersignals/models/base/ExtendedSchema'
-import { Scaffold } from '@aftersignals/models/util/scaffold';
-import Log from '@dazn/lambda-powertools-logger';
-import Schemas from '@aftersignals/models/schema.extended.json';
+import { StandaloneObject } from './models/base/StandaloneObject';
+import { CreateItemRequest } from './models/io/base/contracts/CreateItemRequest'
+import { ListItemsRequest } from './models/io/base/contracts/ListItemsRequest'
+import { ListItemsResponse } from './models/io/base/contracts/ListItemsResponse'
+import { ExtendedJSONSchema } from './models/base/ExtendedSchema'
+import { Logger } from '@aws-lambda-powertools/logger'
 import path from 'path';
 
 /**
@@ -175,13 +170,12 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
    */
   private userTeams: string[] = [];
 
-  /**
-   * Stores identifiers of resources managed by user teams
-   */
-  private userTeamsResources: string[] = [];
+  private logger: Logger;
 
   
   constructor(props: ItemsCrudProps) {
+    this.logger = new Logger({ serviceName: 'itemsCrud' });
+
     if (!props) {
       throw ItemsCrud.INVALID_CONFIGURATION_EXCEPTION;
     }
@@ -214,30 +208,30 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     let Item: any = request;
-    if (this.props.NoScaffolding === true) {
-      Log.info('Ignoring scaffolding as per request');
-    } else {
-      // If an ID is given, update instead
-      const requestId = (request as any)[this.props.IdFieldName || 'Id'];
-      if (!!requestId) {
-        Log.warn('Requested Creation, but this is actually an update. Redirecting')
-        return await this.updateItem(requestId, request as any) as any;
-      }
+    // if (this.props.NoScaffolding === true) {
+    //   this.logger.info('Ignoring scaffolding as per request');
+    // } else {
+    //   // If an ID is given, update instead
+    //   const requestId = (request as any)[this.props.IdFieldName || 'Id'];
+    //   if (!!requestId) {
+    //     this.logger.warn('Requested Creation, but this is actually an update. Redirecting')
+    //     return await this.updateItem(requestId, request as any) as any;
+    //   }
   
-      // TODO Validate model
-      Log.info('Scaffolding object');
-      const schema: ExtendedJSONSchema = (this.props.InputSchema || Schemas.definitions.CreateItemRequest) as any;
-      const scaffold = new Scaffold(schema, { 
-        ...request, 
-        UserId: this.props.UserId
-      });
-      Item = scaffold.data;
-    }
+    //   // TODO Validate model
+    //   this.logger.info('Scaffolding object');
+    //   const schema: ExtendedJSONSchema = (this.props.InputSchema || Schemas.definitions.CreateItemRequest) as any;
+    //   const scaffold = new Scaffold(schema, { 
+    //     ...request, 
+    //     UserId: this.props.UserId
+    //   });
+    //   Item = scaffold.data;
+    // }
 
     // Add parentId to object
     if (this.props.ParentFieldName) {
       const parentId = this.props.ParentId!;
-      Log.debug('Configuring parent field', { ParentField: this.props.ParentFieldName, ParentId: parentId });
+      this.logger.debug('Configuring parent field', { ParentField: this.props.ParentFieldName, ParentId: parentId });
       Item[this.props.ParentFieldName] = parentId;
     }
 
@@ -246,7 +240,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     let finalRequest: any = { ...Item };
     if (this.props.S3Fields) {
       const s3KeyNames = Object.keys(this.props.S3Fields!);
-      Log.info('Managing S3 fields', { fields: s3KeyNames });
+      this.logger.info('Managing S3 fields', { fields: s3KeyNames });
 
       const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
         const s3KeyValue = this.props.S3Fields![s3Key];
@@ -256,7 +250,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         // If it is raw data, then get signed url
         switch(s3KeyValue.DataFormat) {
           case 'raw':
-            Log.info('Generating signed url for field', { Field: s3Key, ContentType: s3KeyValue.ContentType });
+            this.logger.info('Generating signed url for field', { Field: s3Key, ContentType: s3KeyValue.ContentType });
           
             // Get signed url to upload raw data
             const signedUrl = await this.s3.getSignedUrlPromise('putObject', {
@@ -298,7 +292,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       }
     }
 
-    Log.info('Storing object');
+    this.logger.info('Storing object');
     await this.ddb.put({
       TableName: this.props.ItemsTableName,
       Item: finalRequest
@@ -328,14 +322,14 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     (Key as any)[idField] = itemId;
 
-    Log.info('Removing object from storage', { Key });
+    this.logger.info('Removing object from storage', { Key });
 
     // Get item first
-    Log.debug('Fetching item first', { ItemId: itemId, ParentId: parentId });
+    this.logger.debug('Fetching item first', { ItemId: itemId, ParentId: parentId });
     const item = await this.getItemById(itemId, parentId);
     
     // Validate item security
-    Log.debug('Validating item security');
+    this.logger.debug('Validating item security');
     const isAuthorized = await this.verifyItemSecurity(item);
     if (!isAuthorized) {
       throw ItemsCrud.UNAUTHORIZED_EXCEPTION;
@@ -344,7 +338,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     // Delete S3 data
     if (this.props.S3Fields) {
       const s3KeyNames = Object.keys(this.props.S3Fields!);
-      Log.info('Managing S3 fields', { fields: s3KeyNames });
+      this.logger.info('Managing S3 fields', { fields: s3KeyNames });
 
       const objects = s3KeyNames.map((s3Key: any) => {
         const s3KeyValue = this.props.S3Fields![s3Key];
@@ -354,7 +348,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         }
       });
 
-      Log.debug('Deleting files from S3', { Files: objects });
+      this.logger.debug('Deleting files from S3', { Files: objects });
       const s3Response = await this.s3.deleteObjects({
         Bucket: this.props.ItemsBucketName!,
         Delete: {
@@ -362,10 +356,10 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         }
       }).promise();
 
-      Log.debug('Successfully deleted S3 files');
+      this.logger.debug('Successfully deleted S3 files');
     }
 
-    Log.debug('Delete item request', {
+    this.logger.debug('Delete item request', {
       Key
     });
 
@@ -399,7 +393,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     (Key as any)[idField] = itemId;
 
-    Log.info('Getting element by Id', { Key, TableName: this.props.ItemsTableName });
+    this.logger.info('Getting element by Id', { Key, TableName: this.props.ItemsTableName });
 
     const response = await this.ddb.get({
       TableName: this.props.ItemsTableName,
@@ -407,7 +401,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }).promise();
 
     if (!response.Item) {
-      Log.info('Item was not found', { Key });
+      this.logger.info('Item was not found', { Key });
       throw ItemsCrud.ITEM_NOT_FOUND_EXCEPTION;
     }
 
@@ -416,19 +410,19 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     let responseItem = response.Item!;
     const isAuthorizedForItem = await this.verifyItemSecurity(responseItem);
     if (!isAuthorizedForItem) {
-      Log.info('User is not authorized to access item', { Key });
+      this.logger.info('User is not authorized to access item', { Key });
       throw ItemsCrud.ITEM_NOT_FOUND_EXCEPTION;
     }
 
     // Manage S3 Fields
     if (this.props.S3Fields) {
       const s3KeyNames = Object.keys(this.props.S3Fields!);
-      Log.info('Managing S3 fields', { fields: s3KeyNames });
+      this.logger.info('Managing S3 fields', { fields: s3KeyNames });
 
       try {
         const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
           const s3KeyValue = this.props.S3Fields![s3Key];
-          Log.debug('Managing S3 field', { Key: s3Key, Configuration: s3KeyValue });
+          this.logger.debug('Managing S3 field', { Key: s3Key, Configuration: s3KeyValue });
           const dataOwner = this.props.OwnerFieldName ? responseItem[this.props.OwnerFieldName] : responseItem.UserId!;
           
           switch (s3KeyValue.DataFormat) {
@@ -465,7 +459,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
           ...replacements
         }
       } catch (e) {
-        Log.error('Failed to process S3 fields', { Error: e });
+        this.logger.error('Failed to process S3 fields', { Error: e });
         // TODO DElete this shit
       }
     }
@@ -486,7 +480,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     let items: any[] = [];
     if (this.props.ListType === 'owned') {
-      Log.info('Fetching owned items', { UserId: this.props.UserId, IndexName: this.props.IndexName, });
+      this.logger.info('Fetching owned items', { UserId: this.props.UserId, IndexName: this.props.IndexName, });
       let lastPageKey = undefined;
 
       do {
@@ -507,12 +501,12 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
         lastPageKey = queryItems.LastEvaluatedKey;
         if (lastPageKey) {
-          Log.debug('There are more results to fetch', { LastItem: lastPageKey });
+          this.logger.debug('There are more results to fetch', { LastItem: lastPageKey });
         }
       } while (!!lastPageKey);
     }
     else if (this.props.ParentFieldName !== undefined) {
-      Log.info('Fetching items by ParentId', { 
+      this.logger.info('Fetching items by ParentId', { 
         ParentId: this.props.ParentId, 
         ParentIdField: this.props.ParentFieldName,
         IndexName: this.props.IndexName,
@@ -537,11 +531,11 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         items = items.concat(queryItems.Items!);
         lastPageKey = queryItems.LastEvaluatedKey;
         if (lastPageKey) {
-          Log.debug('There are more results to fetch', { LastItem: lastPageKey });
+          this.logger.debug('There are more results to fetch', { LastItem: lastPageKey });
         }
       } while (!!lastPageKey);
     } else {
-      Log.info('Scanning items');
+      this.logger.info('Scanning items');
       const scanItems: ScanOutput = await this.ddb.scan({
         TableName: this.props.ItemsTableName
       }).promise();
@@ -550,7 +544,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     // Manage operation security
-    Log.debug('Managing item security', { OriginalListCount: items.length })
+    this.logger.debug('Managing item security', { OriginalListCount: items.length })
     let filteredItems = [];
     switch (this.props.ListType) {
       case 'owned':
@@ -563,13 +557,13 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     // Parse field-level security
-    Log.debug('Applying field-level security', { FilteredListCount: filteredItems.length });
+    this.logger.debug('Applying field-level security', { FilteredListCount: filteredItems.length });
     let mappedItems: any[] = await Promise.all(filteredItems.map(async (item: StandaloneObject) => await this.applyFieldLevelSecurity(item)));
 
     // Pivot
     if (this.props.Pivot && this.props.Pivot !== 'none') {
       const pivot = this.props.Pivot as any;
-      Log.info('Applying pivot configuration', { Configuration: pivot });
+      this.logger.info('Applying pivot configuration', { Configuration: pivot });
       const sourceKeys = mappedItems.map((item: any) => item[pivot.SourceField]);
       
       const chunks = [];
@@ -577,7 +571,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         chunks.push(sourceKeys.slice(i, Math.min(i+100, sourceKeys.length)));
       }
 
-      Log.info('Fetching pivot items');
+      this.logger.info('Fetching pivot items');
       const pivotResultsResponses = await Promise.all(chunks.map(async chunk => {
         const results = await this.ddb.batchGet({
           RequestItems: {
@@ -610,7 +604,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     // TODO Paging out
 
-    Log.debug('Handing response to client');
+    this.logger.debug('Handing response to client');
     return mappedItems as any;
   }
 
@@ -671,7 +665,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     let finalRequest: any = mappedRequest;
     if (this.props.S3Fields) {
       const s3KeyNames = Object.keys(this.props.S3Fields!);
-      Log.info('Managing S3 fields', { fields: s3KeyNames });
+      this.logger.info('Managing S3 fields', { fields: s3KeyNames });
 
       const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
         const s3KeyValue = this.props.S3Fields![s3Key];
@@ -681,7 +675,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         // If it is raw data, then get signed url
         switch(s3KeyValue.DataFormat) {
           case 'raw':
-            Log.info('Ignoring s3Field as it\'s a raw object', { Field: s3Key });
+            this.logger.info('Ignoring s3Field as it\'s a raw object', { Field: s3Key });
             return null;
           case 'json':
           default:
@@ -718,7 +712,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       ExpressionAttributeValues: changedKeys.map(k => ({ [`:${k}`]: finalRequest[k] })).reduce((t: any, i: any) => ({ ...t, ...i }), {})
     }
 
-    Log.info('Updating object', { 
+    this.logger.info('Updating object', { 
       Key, 
       UpdateExpression: requestObject.UpdateExpression,
       TableName: this.props.ItemsTableName
@@ -744,12 +738,12 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
   async verifyItemSecurity (item: StandaloneObject): Promise<boolean> {
     const itemOwner = this.props.OwnerFieldName ? (item as any)[this.props.OwnerFieldName] : item.UserId!;
-    Log.info('Verifying item security', { userId: this.props.UserId, ownerId: itemOwner });
+    this.logger.info('Verifying item security', { userId: this.props.UserId, ownerId: itemOwner });
 
     // TODO Manage team stuff
     let securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
     if (securityToApply === 'Public' && this.props.Security && this.props.Security!.Team) {
-      Log.info('Finding user teams and resources');
+      this.logger.info('Finding user teams and resources');
       const userTeamsResponse = await this.ddb.query({
         TableName: this.props.TeamMembershipsTableName!,
         IndexName: 'ByMemberId',
@@ -762,14 +756,14 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         }
       }).promise();
 
-      const userTeams: TeamMember[] = userTeamsResponse.Items! as any[];
+      const userTeams: any[] = userTeamsResponse.Items! as any[];
       this.userTeams = userTeams.map((t: any) => t.TeamId!);
-      Log.info('Fetching team resource information', { Teams: this.userTeams });
+      this.logger.info('Fetching team resource information', { Teams: this.userTeams });
 
       const teamResourceRequest = {
         RequestItems: {
           [this.props.TeamResourcesTableName!]: {
-            Keys: userTeams.map((team: TeamMember) => team.Id!)
+            Keys: userTeams.map((team: any) => team.Id!)
             .map((TeamId: string) => ({
               TeamId,
               Id: item.Id!
@@ -782,7 +776,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       const teamResources = Object.values(teamResourcesResponse.Responses!);
       if (teamResources.length) return true;
 
-      Log.error('This is not a team resource', { UserId: this.props.UserId, ResourceId: item.Id! });
+      this.logger.error('This is not a team resource', { UserId: this.props.UserId, ResourceId: item.Id! });
     }
 
     const security = (this.props.Security || {})[securityToApply];

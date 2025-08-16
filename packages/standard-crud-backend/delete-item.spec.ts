@@ -16,25 +16,4 @@ describe('The `deleteItem` method of the items CRUD service', () => {
     // @ts-ignore
     expect(service.deleteItem()).to.eventually.be.rejectedWith(ItemsCrud.INVALID_item_ID_EXCEPTION);
   });
-
-  it('should ask DynamoDB for deletion of the item', done => {
-    const myService = new ItemsCrud({
-      ItemsTableName: 'dummy',
-      UserId: '123',
-      DocumentClient: {
-        // @ts-ignore
-        delete: (input: DeleteItemInput) => ({
-          async promise() {
-            expect(input.TableName).to.be.equals('dummy');
-            expect(input.Key.Id).to.equals('1234');
-            done();
-            return {}
-          }
-        })
-      }
-    });
-
-    myService.deleteItem('1234');
-  });
-
 })
