@@ -1,4 +1,4 @@
-# Architecture & Design Decisions
+ # Architecture & Design Decisions
 
 This document outlines the architectural decisions and design patterns used in the AWS CRUD API construct.
 
@@ -340,3 +340,44 @@ describe('ItemsCrud', () => {
 - **AWS SDK v3**: Migration for better performance and tree-shaking
 - **CDK v3**: When available, maintain compatibility
 - **New AWS Services**: Integration with emerging AWS capabilities
+
+## CDK Version Parity Strategy
+
+### Synchronized Versioning
+
+This package follows a synchronized versioning approach with AWS CDK to ensure compatibility and reduce confusion:
+
+**Version Alignment:**
+- Major versions align with AWS CDK major versions (e.g., v2.x for CDK v2.x)
+- Minor and patch versions follow semantic versioning for features and fixes
+- When new AWS CDK versions are released, this package is automatically updated
+
+**Automated Updates:**
+- Dependabot is configured to monitor AWS CDK releases
+- Upon new `aws-cdk-lib` versions, an automated workflow:
+  1. Updates the CDK dependency version
+  2. Runs tests to ensure compatibility
+  3. Publishes a new package version matching the CDK version number
+  4. Updates the changelog with dependency changes
+
+**Benefits:**
+- **Simplified Compatibility**: Users can easily match package versions to their CDK version
+- **Rapid Updates**: New CDK features are available quickly
+- **Reduced Maintenance**: Automated process reduces manual intervention
+- **Clear Dependencies**: Version numbers clearly indicate CDK compatibility
+
+**Implementation:**
+- Dependabot configuration monitors `aws-cdk-lib` and `constructs`
+- GitHub Actions workflow handles automated version bumping and publishing
+- Semantic versioning ensures breaking changes are properly communicated
+
+**User Guidance:**
+```bash
+# For CDK v2.159.x, use:
+npm install @nerdiyland/aws-crud-api-rest@^2.159.0
+
+# For CDK v2.160.x, use:
+npm install @nerdiyland/aws-crud-api-rest@^2.160.0
+```
+
+This strategy ensures developers always have access to the latest CDK features while maintaining clear compatibility expectations.

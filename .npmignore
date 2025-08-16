@@ -1,6 +1,78 @@
+# TypeScript source files (keep compiled .js and .d.ts)
 *.ts
 !*.d.ts
 
-# CDK asset staging directory
-.cdk.staging
-cdk.out
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+*.spec.js
+*.spec.d.ts
+*.test.js
+*.test.d.ts
+coverage/
+.nyc_output/
+test/
+tests/
+
+# Build and dependency directories
+node_modules/
+.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# CDK specific
+.cdk.staging/
+cdk.out/
+cdk.context.json
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# CI/CD
+.github/
+.circleci/
+.travis.yml
+.gitlab-ci.yml
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Documentation source (keep built docs)
+docs/
+examples/
+
+# Development configuration
+.eslintrc*
+.prettierrc*
+.editorconfig
+tsconfig.json
+jest.config.*
+commitlint.config.*
+
+# Scripts
+scripts/
+
+# Temporary files
+*.tmp
+*.temp
+.temp/
+.tmp/
