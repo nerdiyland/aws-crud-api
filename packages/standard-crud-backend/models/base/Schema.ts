@@ -1,13 +1,12 @@
-import { DataType } from "./DataTypes";
-import { StandaloneObject } from "./StandaloneObject";
+import { DataType } from './DataTypes';
+import { StandaloneObject } from './StandaloneObject';
 
 export enum SchemaOwner {
-  ACCOUNT   = 'account',
-  VARIABLE  = 'variable'
+  ACCOUNT = 'account',
+  VARIABLE = 'variable',
 }
 
 export interface Schema extends StandaloneObject {
-
   /**
    * If this is not a core schema, type of entity that owns it.
    * This works in conjunction with the `OwnerId` field, to properly identify the owner of a given schema.
@@ -23,7 +22,6 @@ export interface Schema extends StandaloneObject {
 
 // TODO
 export interface JSONSchema extends Schema {
-
   /**
    * Schema reference
    */
@@ -60,7 +58,7 @@ export interface JSONSchema extends Schema {
   description?: string;
 
   /**
-   * Name of the data type 
+   * Name of the data type
    * @label entities.ExtendedJSONSchema.properties.name.label
    * @summary entities.ExtendedJSONSchema.properties.name.description
    * @placeholder entities.ExtendedJSONSchema.properties.name.placeholder

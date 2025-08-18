@@ -1,6 +1,4 @@
-
 export interface ListItemsRequest<T> {
-  
   /**
    * Filters to apply to the list
    */

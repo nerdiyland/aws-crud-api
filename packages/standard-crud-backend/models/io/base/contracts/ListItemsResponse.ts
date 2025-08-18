@@ -1,7 +1,6 @@
-import { StandaloneObject } from "../../../base/StandaloneObject";
+import { StandaloneObject } from '../../../base/StandaloneObject';
 
 export interface ListItemsResponse<T extends StandaloneObject> extends Array<T> {
-
   /**
    * Paging mechanics. If set, its value could be used as cursor for the next request
    */

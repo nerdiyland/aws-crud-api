@@ -1,19 +1,25 @@
 import { BaseCrudApiOperationSecurityConfiguration } from './models';
-import { DocumentClient, QueryOutput, ScanOutput } from 'aws-sdk/clients/dynamodb';
-import S3 from 'aws-sdk/clients/s3';
+import {
+  DynamoDB,
+  QueryCommandOutput,
+  ScanCommandOutput,
+  UpdateItemInput,
+} from '@aws-sdk/client-dynamodb';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { GetObjectCommand, PutObjectCommand, S3 } from '@aws-sdk/client-s3';
 import { StandaloneObject } from './models/base/StandaloneObject';
-import { CreateItemRequest } from './models/io/base/contracts/CreateItemRequest'
-import { ListItemsRequest } from './models/io/base/contracts/ListItemsRequest'
-import { ListItemsResponse } from './models/io/base/contracts/ListItemsResponse'
-import { ExtendedJSONSchema } from './models/base/ExtendedSchema'
-import { Logger } from '@aws-lambda-powertools/logger'
+import { CreateItemRequest } from './models/io/base/contracts/CreateItemRequest';
+import { ListItemsRequest } from './models/io/base/contracts/ListItemsRequest';
+import { ListItemsResponse } from './models/io/base/contracts/ListItemsResponse';
+import { ExtendedJSONSchema } from './models/base/ExtendedSchema';
+import { Logger } from '@aws-lambda-powertools/logger';
 import path from 'path';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 /**
  * Configures the Items CRUD service
  */
 export interface ItemsCrudProps {
-
   /**
    * Identity ID of the user that is requesting this service instance
    */
@@ -30,9 +36,9 @@ export interface ItemsCrudProps {
   ItemsBucketName?: string;
 
   /**
-   * Optionally, provide the documentClient instance to use
+   * Optionally, provide the DynamoDB instance to use
    */
-  DocumentClient?: DocumentClient;
+  DynamoDB?: DynamoDB;
 
   /**
    * Region where this service is deployed
@@ -81,7 +87,7 @@ export interface ItemsCrudProps {
 
   OutputFields?: string[];
 
-  S3Fields?: { [key: string]: any },
+  S3Fields?: { [key: string]: any };
 
   Security?: BaseCrudApiOperationSecurityConfiguration;
 
@@ -89,10 +95,12 @@ export interface ItemsCrudProps {
 
   TeamResourcesTableName?: string;
 
-  Pivot?: 'none' | {
-    SourceField: string;
-    PivotFields: string[];
-  },
+  Pivot?:
+    | 'none'
+    | {
+        SourceField: string;
+        PivotFields: string[];
+      };
 
   PivotTableName?: string;
 
@@ -112,7 +120,6 @@ export interface ItemsCrudProps {
  * * L: List filtering request
  */
 export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, U, D, L> {
-
   /**
    * Thrown when a requested item is not found
    */
@@ -126,7 +133,9 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
   /**
    * Thrown when the input configuration does not include a value for `ItemsTableName`
    */
-  static NO_ITEMS_TABLE_EXCEPTION = new Error('No value has been given for the `ItemsTableName` property');
+  static NO_ITEMS_TABLE_EXCEPTION = new Error(
+    'No value has been given for the `ItemsTableName` property'
+  );
 
   /**
    * Thrown when invalid or no UserId is provided
@@ -158,7 +167,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
   /**
    * Accessor for DynamoDB
    */
-  private readonly ddb: DocumentClient;
+  private readonly ddb: DynamoDB;
 
   /**
    * Accessor for S3
@@ -172,7 +181,6 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
   private logger: Logger;
 
-  
   constructor(props: ItemsCrudProps) {
     this.logger = new Logger({ serviceName: 'itemsCrud' });
 
@@ -189,15 +197,17 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     }
 
     this.props = props;
-    this.ddb = props.DocumentClient || new DocumentClient({
-      region: props.AwsRegion || process.env.AWS_REGION
-    });
+    this.ddb =
+      props.DynamoDB ||
+      new DynamoDB({
+        region: props.AwsRegion || process.env.AWS_REGION,
+      });
 
     this.s3 = new S3({
-      region: props.AwsRegion || process.env.AWS_REGION
-    })
+      region: props.AwsRegion || process.env.AWS_REGION,
+    });
   }
-  
+
   /**
    * Creates an item in the system, and fills the required information
    * @param request Input object to configure the item
@@ -207,7 +217,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       throw ItemsCrud.INVALID_REQUEST_OBJECT;
     }
 
-    let Item: any = request;
+    const Item: any = request;
     // if (this.props.NoScaffolding === true) {
     //   this.logger.info('Ignoring scaffolding as per request');
     // } else {
@@ -217,12 +227,12 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     //     this.logger.warn('Requested Creation, but this is actually an update. Redirecting')
     //     return await this.updateItem(requestId, request as any) as any;
     //   }
-  
+
     //   // TODO Validate model
     //   this.logger.info('Scaffolding object');
     //   const schema: ExtendedJSONSchema = (this.props.InputSchema || Schemas.definitions.CreateItemRequest) as any;
-    //   const scaffold = new Scaffold(schema, { 
-    //     ...request, 
+    //   const scaffold = new Scaffold(schema, {
+    //     ...request,
     //     UserId: this.props.UserId
     //   });
     //   Item = scaffold.data;
@@ -231,7 +241,10 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     // Add parentId to object
     if (this.props.ParentFieldName) {
       const parentId = this.props.ParentId!;
-      this.logger.debug('Configuring parent field', { ParentField: this.props.ParentFieldName, ParentId: parentId });
+      this.logger.debug('Configuring parent field', {
+        ParentField: this.props.ParentFieldName,
+        ParentId: parentId,
+      });
       Item[this.props.ParentFieldName] = parentId;
     }
 
@@ -242,61 +255,77 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       const s3KeyNames = Object.keys(this.props.S3Fields!);
       this.logger.info('Managing S3 fields', { fields: s3KeyNames });
 
-      const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
-        const s3KeyValue = this.props.S3Fields![s3Key];
-        const key = path.join(`${s3KeyValue.Prefix || ''}`, this.props.UserId, (Item as any)[this.props.IdFieldName || 'Id']!, `${s3Key}`);
+      const s3Keys = await Promise.all(
+        s3KeyNames.map(async (s3Key: any) => {
+          const s3KeyValue = this.props.S3Fields![s3Key];
+          const key = path.join(
+            `${s3KeyValue.Prefix || ''}`,
+            this.props.UserId,
+            (Item as any)[this.props.IdFieldName || 'Id']!,
+            `${s3Key}`
+          );
 
-        // If S3 data is an object, put it.
-        // If it is raw data, then get signed url
-        switch(s3KeyValue.DataFormat) {
-          case 'raw':
-            this.logger.info('Generating signed url for field', { Field: s3Key, ContentType: s3KeyValue.ContentType });
-          
-            // Get signed url to upload raw data
-            const signedUrl = await this.s3.getSignedUrlPromise('putObject', {
-              Bucket: this.props.ItemsBucketName!,
-              Key: key,
-              Expires: 30,
-              ContentType: s3KeyValue.ContentType
-            });
+          // If S3 data is an object, put it.
+          // If it is raw data, then get signed url
+          switch (s3KeyValue.DataFormat) {
+            case 'raw':
+              this.logger.info('Generating signed url for field', {
+                Field: s3Key,
+                ContentType: s3KeyValue.ContentType,
+              });
 
-            ret[s3Key] = signedUrl;
-            return { [s3Key]: `s3://${this.props.ItemsBucketName}/${key}` };
-          case 'json':
-          default:
-            const contents = (finalRequest as any)[s3Key];
-            if (contents !== undefined) {
-              const strContents = typeof(contents) === 'object' ? JSON.stringify(contents) : contents;
+              // Get signed url to upload raw data
+              const signedUrl = await getSignedUrl(
+                this.s3,
+                new PutObjectCommand({
+                  Bucket: this.props.ItemsBucketName!,
+                  Key: key,
+                  ContentType: s3KeyValue.ContentType,
+                }),
+                {
+                  expiresIn: 30,
+                }
+              );
 
-              const s3Response = await this.s3.putObject({
-                Bucket: this.props.ItemsBucketName!,
-                Key: key,
-                Body: strContents,
-                // ServerSideEncryption: 'aws:kms',
-                // TODO Configure encryption and more
-              }).promise();
+              ret[s3Key] = signedUrl;
+              return { [s3Key]: `s3://${this.props.ItemsBucketName}/${key}` };
+            case 'json':
+            default:
+              const contents = (finalRequest as any)[s3Key];
+              if (contents !== undefined) {
+                const strContents =
+                  typeof contents === 'object' ? JSON.stringify(contents) : contents;
 
-              return { [s3Key]: key }
-            }  
-        }
-        
-        return {};
-      }))
+                const s3Response = await this.s3.putObject({
+                  Bucket: this.props.ItemsBucketName!,
+                  Key: key,
+                  Body: strContents,
+                  // ServerSideEncryption: 'aws:kms',
+                  // TODO Configure encryption and more
+                });
+
+                return { [s3Key]: key };
+              }
+          }
+
+          return {};
+        })
+      );
 
       const objectReplacement = s3Keys
         .filter(i => !!i) // Filter null keys (from raw data)
         .reduce((t, i) => ({ ...t, ...i }), {});
       finalRequest = {
         ...finalRequest,
-        ...objectReplacement
-      }
+        ...objectReplacement,
+      };
     }
 
     this.logger.info('Storing object');
-    await this.ddb.put({
+    await this.ddb.putItem({
       TableName: this.props.ItemsTableName,
-      Item: finalRequest
-    }).promise();
+      Item: marshall(finalRequest, { removeUndefinedValues: true }),
+    });
 
     return ret;
   }
@@ -327,7 +356,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
     // Get item first
     this.logger.debug('Fetching item first', { ItemId: itemId, ParentId: parentId });
     const item = await this.getItemById(itemId, parentId);
-    
+
     // Validate item security
     this.logger.debug('Validating item security');
     const isAuthorized = await this.verifyItemSecurity(item);
@@ -342,45 +371,50 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
       const objects = s3KeyNames.map((s3Key: any) => {
         const s3KeyValue = this.props.S3Fields![s3Key];
-        const key = path.join(`${s3KeyValue.Prefix || ''}`, this.props.UserId, (item as any)[this.props.IdFieldName || 'Id']!, `${s3Key}`);
+        const key = path.join(
+          `${s3KeyValue.Prefix || ''}`,
+          this.props.UserId,
+          (item as any)[this.props.IdFieldName || 'Id']!,
+          `${s3Key}`
+        );
         return {
-          Key: key
-        }
+          Key: key,
+        };
       });
 
       this.logger.debug('Deleting files from S3', { Files: objects });
       const s3Response = await this.s3.deleteObjects({
         Bucket: this.props.ItemsBucketName!,
         Delete: {
-          Objects: objects
-        }
-      }).promise();
+          Objects: objects,
+        },
+      });
 
       this.logger.debug('Successfully deleted S3 files');
     }
 
     this.logger.debug('Delete item request', {
-      Key
+      Key,
     });
 
-    await this.ddb.delete({
+    await this.ddb.deleteItem({
       TableName: this.props.ItemsTableName,
-      Key
-    }).promise();
+      Key: marshall(Key),
+    });
   }
 
   /**
    * Retrieves the item identified by the provided ID.
    * @param itemId Id of the item
    */
-  async getItemById (itemId: string, parentId?: string): Promise<R> {
+  async getItemById(itemId: string, parentId?: string): Promise<R> {
     if (!itemId) {
       throw ItemsCrud.INVALID_ITEM_ID_EXCEPTION;
     }
-    
+
     const idField = this.props.IdFieldName || 'Id';
     const parentField = this.props.ParentFieldName;
-    
+
     if (!parentId) {
       parentId = this.props.ParentId;
     }
@@ -395,10 +429,10 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     this.logger.info('Getting element by Id', { Key, TableName: this.props.ItemsTableName });
 
-    const response = await this.ddb.get({
+    const response = await this.ddb.getItem({
       TableName: this.props.ItemsTableName,
-      Key
-    }).promise();
+      Key: marshall(Key),
+    });
 
     if (!response.Item) {
       this.logger.info('Item was not found', { Key });
@@ -407,7 +441,7 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     // Verify ownership of object
     // It's a 403, but show a 404 as user doesn't need to know whether the object exists.
-    let responseItem = response.Item!;
+    let responseItem = unmarshall(response.Item!);
     const isAuthorizedForItem = await this.verifyItemSecurity(responseItem);
     if (!isAuthorizedForItem) {
       this.logger.info('User is not authorized to access item', { Key });
@@ -420,44 +454,59 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       this.logger.info('Managing S3 fields', { fields: s3KeyNames });
 
       try {
-        const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
-          const s3KeyValue = this.props.S3Fields![s3Key];
-          this.logger.debug('Managing S3 field', { Key: s3Key, Configuration: s3KeyValue });
-          const dataOwner = this.props.OwnerFieldName ? responseItem[this.props.OwnerFieldName] : responseItem.UserId!;
-          
-          switch (s3KeyValue.DataFormat) {
-            case 'raw':
-              // Get signed URL for content
-              const key = path.join(`${s3KeyValue.Prefix || ''}`, dataOwner, (responseItem as any)[this.props.IdFieldName || 'Id']!, `${s3Key}`);
-              const signedUrl = await this.s3.getSignedUrlPromise('getObject', {
-                Bucket: this.props.ItemsBucketName!,
-                Key: key,
-                Expires: 3600
-              });
+        const s3Keys = await Promise.all(
+          s3KeyNames.map(async (s3Key: any) => {
+            const s3KeyValue = this.props.S3Fields![s3Key];
+            this.logger.debug('Managing S3 field', { Key: s3Key, Configuration: s3KeyValue });
+            const dataOwner = this.props.OwnerFieldName
+              ? responseItem[this.props.OwnerFieldName]
+              : responseItem.UserId!;
 
-              return { [s3Key]: signedUrl };
-            case 'json':
-            default:
-              const objectKey = responseItem[s3Key];
-              if (!objectKey) {
-                return { [s3Key]: undefined };
-              } 
+            switch (s3KeyValue.DataFormat) {
+              case 'raw':
+                // Get signed URL for content
+                const key = path.join(
+                  `${s3KeyValue.Prefix || ''}`,
+                  dataOwner,
+                  (responseItem as any)[this.props.IdFieldName || 'Id']!,
+                  `${s3Key}`
+                );
+                const signedUrl = await getSignedUrl(
+                  this.s3,
+                  new GetObjectCommand({
+                    Bucket: this.props.ItemsBucketName!,
+                    Key: key,
+                  }),
+                  {
+                    expiresIn: 3600,
+                  }
+                );
 
-              const contents = await this.s3.getObject({
-                Bucket: this.props.ItemsBucketName!,
-                Key: objectKey
-              }).promise();
-    
-              let parsedContents = JSON.parse(contents.Body!.toString('utf-8'));
-              return { [s3Key]: parsedContents };
-          }
-        }));
+                return { [s3Key]: signedUrl };
+              case 'json':
+              default:
+                const objectKey = responseItem[s3Key];
+                if (!objectKey) {
+                  return { [s3Key]: undefined };
+                }
+
+                const contents = await this.s3.getObject({
+                  Bucket: this.props.ItemsBucketName!,
+                  Key: objectKey,
+                });
+
+                const contentStr = await contents.Body!.transformToString();
+                const parsedContents = JSON.parse(contentStr);
+                return { [s3Key]: parsedContents };
+            }
+          })
+        );
 
         const replacements = s3Keys.reduce((t, i) => ({ ...t, ...i }), {});
         responseItem = {
           ...responseItem,
-          ...replacements
-        }
+          ...replacements,
+        };
       } catch (e) {
         this.logger.error('Failed to process S3 fields', { Error: e });
         // TODO DElete this shit
@@ -473,78 +522,79 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
   /**
    * Lists the existing items in the database
    */
-  async listItems (request?: ListItemsRequest<L>): Promise<ListItemsResponse<R>> {
-    
+  async listItems(request?: ListItemsRequest<L>): Promise<ListItemsResponse<R>> {
     // Paging results
     // XXX For now paging just works automatically, and all pages are retrieved when fetching owned or parent items.
 
     let items: any[] = [];
     if (this.props.ListType === 'owned') {
-      this.logger.info('Fetching owned items', { UserId: this.props.UserId, IndexName: this.props.IndexName, });
+      this.logger.info('Fetching owned items', {
+        UserId: this.props.UserId,
+        IndexName: this.props.IndexName,
+      });
       let lastPageKey = undefined;
 
       do {
-        const queryItems: QueryOutput = await this.ddb.query({
+        const queryItems: QueryCommandOutput = await this.ddb.query({
           TableName: this.props.ItemsTableName,
           IndexName: this.props.IndexName,
           KeyConditionExpression: '#userId = :userId',
           ExpressionAttributeNames: {
-            '#userId': this.props.ParentFieldName || 'UserId'
+            '#userId': this.props.ParentFieldName || 'UserId',
           },
           ExpressionAttributeValues: {
-            ':userId': this.props.UserId
+            ':userId': marshall(this.props.UserId),
           },
-          ExclusiveStartKey: lastPageKey
-        }).promise();
+          ExclusiveStartKey: lastPageKey,
+        });
 
-        items = items.concat(queryItems.Items!);
+        items = items.concat((queryItems.Items || []).map(i => unmarshall(i)));
 
         lastPageKey = queryItems.LastEvaluatedKey;
         if (lastPageKey) {
           this.logger.debug('There are more results to fetch', { LastItem: lastPageKey });
         }
-      } while (!!lastPageKey);
-    }
-    else if (this.props.ParentFieldName !== undefined) {
-      this.logger.info('Fetching items by ParentId', { 
-        ParentId: this.props.ParentId, 
+      } while (lastPageKey);
+    } else if (this.props.ParentFieldName !== undefined) {
+      this.logger.info('Fetching items by ParentId', {
+        ParentId: this.props.ParentId,
         ParentIdField: this.props.ParentFieldName,
         IndexName: this.props.IndexName,
       });
 
       let lastPageKey = undefined;
-      
+
       do {
-        const queryItems: QueryOutput = await this.ddb.query({
+        const queryItems: QueryCommandOutput = await this.ddb.query({
           TableName: this.props.ItemsTableName,
           IndexName: this.props.IndexName,
           KeyConditionExpression: '#parentId = :parentId',
           ExpressionAttributeNames: {
-            '#parentId': this.props.ParentFieldName!
+            '#parentId': this.props.ParentFieldName!,
           },
           ExpressionAttributeValues: {
-            ':parentId': this.props.ParentId
+            ':parentId': marshall(this.props.ParentId),
           },
-          ExclusiveStartKey: lastPageKey
-        }).promise();
+          ExclusiveStartKey: lastPageKey,
+        });
 
-        items = items.concat(queryItems.Items!);
+        items = items.concat((queryItems.Items || []).map(i => unmarshall(i)));
         lastPageKey = queryItems.LastEvaluatedKey;
         if (lastPageKey) {
           this.logger.debug('There are more results to fetch', { LastItem: lastPageKey });
         }
-      } while (!!lastPageKey);
+      } while (lastPageKey);
     } else {
       this.logger.info('Scanning items');
-      const scanItems: ScanOutput = await this.ddb.scan({
-        TableName: this.props.ItemsTableName
-      }).promise();
+      const scanItems: ScanCommandOutput = await this.ddb.scan({
+        TableName: this.props.ItemsTableName,
+      });
 
-      items = items.concat(scanItems.Items!);
+      items = items.concat((scanItems.Items || []).map(i => unmarshall(i)));
     }
 
     // Manage operation security
-    this.logger.debug('Managing item security', { OriginalListCount: items.length })
+    this.logger.debug('Managing item security', { OriginalListCount: items.length });
     let filteredItems = [];
     switch (this.props.ListType) {
       case 'owned':
@@ -553,49 +603,58 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
         break;
       default:
         // Filter items by security configuration
-        filteredItems = await Promise.all(items.filter(async (item: StandaloneObject) => await this.verifyItemSecurity(item)));
+        filteredItems = await Promise.all(
+          items.filter(async (item: StandaloneObject) => await this.verifyItemSecurity(item))
+        );
     }
 
     // Parse field-level security
     this.logger.debug('Applying field-level security', { FilteredListCount: filteredItems.length });
-    let mappedItems: any[] = await Promise.all(filteredItems.map(async (item: StandaloneObject) => await this.applyFieldLevelSecurity(item)));
+    let mappedItems: any[] = await Promise.all(
+      filteredItems.map(async (item: StandaloneObject) => await this.applyFieldLevelSecurity(item))
+    );
 
     // Pivot
     if (this.props.Pivot && this.props.Pivot !== 'none') {
       const pivot = this.props.Pivot as any;
       this.logger.info('Applying pivot configuration', { Configuration: pivot });
       const sourceKeys = mappedItems.map((item: any) => item[pivot.SourceField]);
-      
+
       const chunks = [];
       for (let i = 0; i < sourceKeys.length; i += 100) {
-        chunks.push(sourceKeys.slice(i, Math.min(i+100, sourceKeys.length)));
+        chunks.push(sourceKeys.slice(i, Math.min(i + 100, sourceKeys.length)));
       }
 
       this.logger.info('Fetching pivot items');
-      const pivotResultsResponses = await Promise.all(chunks.map(async chunk => {
-        const results = await this.ddb.batchGet({
-          RequestItems: {
-            [this.props.PivotTableName!]: {
-              Keys: chunk.map(Id => ({ Id }))
-            }
-          }
-        }).promise();
+      const pivotResultsResponses = await Promise.all(
+        chunks.map(async chunk => {
+          const results = await this.ddb.batchGetItem({
+            RequestItems: {
+              [this.props.PivotTableName!]: {
+                Keys: chunk.map(Id => ({ Id: marshall(Id) })),
+              },
+            },
+          });
 
-        const items = results.Responses![this.props.PivotTableName!];
-        return items;
-      }))
+          const items = results.Responses![this.props.PivotTableName!];
+          return items;
+        })
+      );
 
-      const allResponses = pivotResultsResponses.flat();
+      const allResponses = pivotResultsResponses.flat().map(r => unmarshall(r));
       const pivotedItems = mappedItems.map((item: any) => {
         const pivotItem: any = allResponses.find(ii => ii.Id === item[pivot.SourceField])!;
 
         return {
           ...item,
-          ...(pivot.PivotFields.reduce((t: any, i: any) => ({
-            ...t, 
-            [i]: pivotItem[i]
-          }), {}))
-        }
+          ...pivot.PivotFields.reduce(
+            (t: any, i: any) => ({
+              ...t,
+              [i]: pivotItem[i],
+            }),
+            {}
+          ),
+        };
       });
 
       // Store items
@@ -624,14 +683,14 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
 
     const idField = this.props.IdFieldName || 'Id';
     const parentField = this.props.ParentFieldName;
-    
+
     const parentId = this.props.ParentId;
 
     const Key = {
-      ...(!parentField ? {} : { [parentField]: parentId }),
-      [idField]: itemId
+      ...(!parentField ? {} : { [parentField]: marshall(parentId) }),
+      [idField]: marshall(itemId),
     };
-    
+
     delete (request as any)[idField];
 
     // Delete CreatedAt, DeletedAt && UserId
@@ -667,81 +726,94 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
       const s3KeyNames = Object.keys(this.props.S3Fields!);
       this.logger.info('Managing S3 fields', { fields: s3KeyNames });
 
-      const s3Keys = await Promise.all(s3KeyNames.map(async (s3Key: any) => {
-        const s3KeyValue = this.props.S3Fields![s3Key];
-        const key = path.join(`${s3KeyValue.Prefix || ''}`, this.props.UserId, itemId, `${s3Key}`);
+      const s3Keys = await Promise.all(
+        s3KeyNames.map(async (s3Key: any) => {
+          const s3KeyValue = this.props.S3Fields![s3Key];
+          const key = path.join(
+            `${s3KeyValue.Prefix || ''}`,
+            this.props.UserId,
+            itemId,
+            `${s3Key}`
+          );
 
-        // If S3 data is an object, put it.
-        // If it is raw data, then get signed url
-        switch(s3KeyValue.DataFormat) {
-          case 'raw':
-            this.logger.info('Ignoring s3Field as it\'s a raw object', { Field: s3Key });
-            return null;
-          case 'json':
-          default:
-            const contents = (mappedRequest as any)[s3Key];
-            const strContents = typeof(contents) === 'object' ? JSON.stringify(contents) : contents;
+          // If S3 data is an object, put it.
+          // If it is raw data, then get signed url
+          switch (s3KeyValue.DataFormat) {
+            case 'raw':
+              this.logger.info("Ignoring s3Field as it's a raw object", { Field: s3Key });
+              return null;
+            case 'json':
+            default:
+              const contents = (mappedRequest as any)[s3Key];
+              const strContents =
+                typeof contents === 'object' ? JSON.stringify(contents) : contents;
 
-            const s3Response = await this.s3.putObject({
-              Bucket: this.props.ItemsBucketName!,
-              Key: key,
-              Body: strContents,
-              // ServerSideEncryption: 'aws:kms',
-              // TODO Configure encryption and more
-            }).promise();
+              await this.s3.putObject({
+                Bucket: this.props.ItemsBucketName!,
+                Key: key,
+                Body: strContents,
+                // ServerSideEncryption: 'aws:kms',
+                // TODO Configure encryption and more
+              });
 
-            return { [s3Key]: key }
-        }
-      }));
+              return { [s3Key]: key };
+          }
+        })
+      );
 
-      const objectReplacement = s3Keys
-        .filter(k => !!k)
-        .reduce((t, i) => ({ ...t, ...i }), {});
+      const objectReplacement = s3Keys.filter(k => !!k).reduce((t, i) => ({ ...t, ...i }), {});
 
       finalRequest = {
         ...finalRequest,
-        ...objectReplacement
-      }
+        ...objectReplacement,
+      };
     }
 
-    const requestObject: DocumentClient.UpdateItemInput = {
+    const requestObject: UpdateItemInput = {
       TableName: this.props.ItemsTableName,
       Key,
       UpdateExpression: `set ${changedKeys.map(k => `#${k} = :${k}`).join(', ')}`.trim(),
-      ExpressionAttributeNames: changedKeys.map(k => ({ [`#${k}`]: k })).reduce((t: any, i: any) => ({ ...t, ...i }), {}),
-      ExpressionAttributeValues: changedKeys.map(k => ({ [`:${k}`]: finalRequest[k] })).reduce((t: any, i: any) => ({ ...t, ...i }), {})
-    }
+      ExpressionAttributeNames: changedKeys
+        .map(k => ({ [`#${k}`]: k }))
+        .reduce((t: any, i: any) => ({ ...t, ...i }), {}),
+      ExpressionAttributeValues: changedKeys
+        .map(k => ({ [`:${k}`]: marshall(finalRequest[k]) }))
+        .reduce((t: any, i: any) => ({ ...t, ...i }), {}),
+    };
 
-    this.logger.info('Updating object', { 
-      Key, 
+    this.logger.info('Updating object', {
+      Key,
       UpdateExpression: requestObject.UpdateExpression,
-      TableName: this.props.ItemsTableName
+      TableName: this.props.ItemsTableName,
     });
 
-    await this.ddb.update(requestObject).promise();
-
+    await this.ddb.updateItem(requestObject);
     return await this.getItemById(itemId, parentId);
   }
 
-  async applyFieldLevelSecurity (item: StandaloneObject) {
+  async applyFieldLevelSecurity(item: StandaloneObject) {
     const itemOwner = item.UserId!;
 
     // TODO Manage team stuff
-    let securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
+    const securityToApply: 'Owner' | 'Public' =
+      itemOwner === this.props.UserId ? 'Owner' : 'Public';
 
-    const security = ((this.props.Security || {})[securityToApply]) || {};
-    const fields = (security.Fields || Object.keys(item));
-    
+    const security = (this.props.Security || {})[securityToApply] || {};
+    const fields = security.Fields || Object.keys(item);
+
     // TODO Manage sub-field permissions
-    return fields.reduce((ret, field) => ({ ...ret, [field]: (item as any)[field]}), {})
+    return fields.reduce((ret, field) => ({ ...ret, [field]: (item as any)[field] }), {});
   }
 
-  async verifyItemSecurity (item: StandaloneObject): Promise<boolean> {
-    const itemOwner = this.props.OwnerFieldName ? (item as any)[this.props.OwnerFieldName] : item.UserId!;
+  async verifyItemSecurity(item: StandaloneObject): Promise<boolean> {
+    const itemOwner = this.props.OwnerFieldName
+      ? (item as any)[this.props.OwnerFieldName]
+      : item.UserId!;
     this.logger.info('Verifying item security', { userId: this.props.UserId, ownerId: itemOwner });
 
     // TODO Manage team stuff
-    let securityToApply: 'Owner' | 'Public' = itemOwner === this.props.UserId ? 'Owner' : 'Public';
+    const securityToApply: 'Owner' | 'Public' =
+      itemOwner === this.props.UserId ? 'Owner' : 'Public';
     if (securityToApply === 'Public' && this.props.Security && this.props.Security!.Team) {
       this.logger.info('Finding user teams and resources');
       const userTeamsResponse = await this.ddb.query({
@@ -752,36 +824,39 @@ export class ItemsCrud<C extends CreateItemRequest, R extends StandaloneObject, 
           '#userId': 'MemberId',
         },
         ExpressionAttributeValues: {
-          ':userId': this.props.UserId
-        }
-      }).promise();
+          ':userId': marshall(this.props.UserId),
+        },
+      });
 
-      const userTeams: any[] = userTeamsResponse.Items! as any[];
+      const userTeams: any[] = (userTeamsResponse.Items || []).map(i => unmarshall(i)) as any[];
       this.userTeams = userTeams.map((t: any) => t.TeamId!);
       this.logger.info('Fetching team resource information', { Teams: this.userTeams });
 
       const teamResourceRequest = {
         RequestItems: {
           [this.props.TeamResourcesTableName!]: {
-            Keys: userTeams.map((team: any) => team.Id!)
-            .map((TeamId: string) => ({
-              TeamId,
-              Id: item.Id!
-            }))
-          }
-        }
-      }
+            Keys: userTeams
+              .map((team: any) => marshall(team.Id!))
+              .map(TeamId => ({
+                TeamId,
+                Id: marshall(item.Id!),
+              })),
+          },
+        },
+      };
 
-      const teamResourcesResponse = await this.ddb.batchGet(teamResourceRequest).promise();
+      const teamResourcesResponse = await this.ddb.batchGetItem(teamResourceRequest);
       const teamResources = Object.values(teamResourcesResponse.Responses!);
       if (teamResources.length) return true;
 
-      this.logger.error('This is not a team resource', { UserId: this.props.UserId, ResourceId: item.Id! });
+      this.logger.error('This is not a team resource', {
+        UserId: this.props.UserId,
+        ResourceId: item.Id!,
+      });
     }
 
     const security = (this.props.Security || {})[securityToApply];
     if (!security) {
-
       // FIXME To keep things working, we'll allow owners to fetch their items
       // Even if no security was set o the api.
       if (securityToApply === 'Owner') return true;

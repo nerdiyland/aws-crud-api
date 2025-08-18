@@ -1,8 +1,14 @@
 import { IBucket } from 'aws-cdk-lib/aws-s3';
-import { IResource, JsonSchema, Model, RequestValidator, RestApi } from "aws-cdk-lib/aws-apigateway";
-import { AttributeType, ITable } from "aws-cdk-lib/aws-dynamodb";
-import { IFunction } from "aws-cdk-lib/aws-lambda";
-import { Duration } from "aws-cdk-lib";
+import {
+  IResource,
+  JsonSchema,
+  Model,
+  RequestValidator,
+  RestApi,
+} from 'aws-cdk-lib/aws-apigateway';
+import { AttributeType, ITable } from 'aws-cdk-lib/aws-dynamodb';
+import { IFunction } from 'aws-cdk-lib/aws-lambda';
+import { Duration } from 'aws-cdk-lib';
 
 export interface BaseCrudApiProps {
   EnvironmentName: string;
@@ -17,7 +23,7 @@ export interface BaseCrudApiProps {
    * Logical name for the component. It'd be used on outputs and other identifiers
    */
   ComponentName?: string;
-  
+
   /**
    * Defines the path for this API resource
    */
@@ -58,7 +64,7 @@ export interface BaseCrudApiProps {
   /**
    * Optional name for the {id} field in the api resource. By default it's set to `id`
    */
-  IdResourceName?: string; 
+  IdResourceName?: string;
 
   /**
    * Optional name for the id of this resource's parent.
@@ -115,7 +121,7 @@ export interface BaseCrudApiProps {
    * Determines which fields of the resource's model shall be stored and retrieved from S3
    * This is useful when APIs handle a resource that stores large data as part of the contract
    */
-  S3Fields?: { [key: string]: BaseCrudApiOperationS3FieldConfiguration }
+  S3Fields?: { [key: string]: BaseCrudApiOperationS3FieldConfiguration };
 
   TeamMembershipsTable?: ITable;
   TeamResourcesTable?: ITable;
@@ -131,7 +137,7 @@ export interface BaseCrudApiProps {
   // Avoid scaffolding
   NoScaffolding?: boolean;
 }
-  
+
 export interface BaseCrudApiTableConfigurationProps {
   HashKeyName: string;
   HashKeyType: AttributeType;
@@ -198,7 +204,7 @@ export interface BaseCrudApiOperationSecurityConfiguration {
 }
 
 /**
- * Security 
+ * Security
  */
 export interface BaseCrudApiOperationSecurityRoleConfiguration {
   Fields?: string[];

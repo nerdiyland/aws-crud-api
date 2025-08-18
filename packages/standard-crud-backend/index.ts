@@ -1,7 +1,6 @@
-import { IotData } from 'aws-sdk';
-import { Logger } from '@aws-lambda-powertools/logger'
+import { IoTDataPlaneClient, PublishCommand } from '@aws-sdk/client-iot-data-plane';
+import { Logger } from '@aws-lambda-powertools/logger';
 import { ItemsCrud } from './items-crud';
-import { FunctionEvent } from './models/io/base/FunctionEvent';
 import { CreateItemRequest } from './models/io/base/contracts/CreateItemRequest';
 import { ListItemsRequest } from './models/io/base/contracts/ListItemsRequest';
 import { ExtendedJSONSchema } from './models/base/ExtendedSchema';
@@ -13,7 +12,7 @@ export enum OperationType {
   LIST_ITEMS = 'listItems',
   GET_ITEM = 'getItemById',
   UPDATE_ITEM = 'updateItem',
-  DELETE_ITEM = 'deleteItem'
+  DELETE_ITEM = 'deleteItem',
 }
 
 const INVALID_OPERATION_EXCEPTION = new Error('Invalid operation requested');
@@ -26,12 +25,11 @@ const EnvironmentName = process.env.ENVIRONMENT_NAME!;
 const PivotTableName = process.env.PIVOT_TABLE_NAME!;
 
 const logger = new Logger();
-export const handler = async (event: any) => { // (event: FunctionEvent<any> as any) => {
-  const { 
-    Id, 
-    OperationName, 
-    EntitySchema,
-    InputSchema,
+export const handler = async (event: any) => {
+  // (event: FunctionEvent<any> as any) => {
+  const {
+    Id,
+    OperationName,
     IdFieldName,
     ParentFieldName,
     OwnerFieldName,
@@ -44,11 +42,11 @@ export const handler = async (event: any) => { // (event: FunctionEvent<any> as 
     Security,
     Pivot,
     InputUserId,
-    NoScaffolding
+    NoScaffolding,
   } = event.Params as any;
 
   let UserId = event.Params.UserId!;
-  
+
   const Data = event.Data;
 
   if (!UserId || !UserId.length) {
@@ -92,7 +90,7 @@ export const handler = async (event: any) => { // (event: FunctionEvent<any> as 
     TeamResourcesTableName,
     Pivot,
     PivotTableName,
-    NoScaffolding
+    NoScaffolding,
   });
 
   try {
@@ -102,25 +100,22 @@ export const handler = async (event: any) => { // (event: FunctionEvent<any> as 
         const createResult = await itemsCrud.createItem(Data as CreateItemRequest);
         if (SuccessEvent) {
           logger.info('Operation is configured to submit an event', { EventTopic: SuccessEvent });
-          
-          const iotData = new IotData({
-            endpoint: IotEndpointAddress
+
+          const iotData = new IoTDataPlaneClient({
+            endpoint: IotEndpointAddress,
           });
 
-          await iotData.publish({
-            topic: join(
-              EnvironmentName,
-              'events', 
-              UserId, 
-              SuccessEvent
-            ),
-            payload: JSON.stringify({
-              Id: createResult.Id,
-              UserId,
-              EventId: uuid(),
-              EventDate: new Date().toISOString(),
+          await iotData.send(
+            new PublishCommand({
+              topic: join(EnvironmentName, 'events', UserId, SuccessEvent),
+              payload: JSON.stringify({
+                Id: createResult.Id,
+                UserId,
+                EventId: uuid(),
+                EventDate: new Date().toISOString(),
+              }),
             })
-          }).promise();
+          );
         }
         return mapResponse(createResult, OutputFields);
       case OperationType.LIST_ITEMS:
@@ -136,20 +131,22 @@ export const handler = async (event: any) => { // (event: FunctionEvent<any> as 
         const updateResult = await itemsCrud.updateItem(Id!, Data);
         if (SuccessEvent) {
           logger.info('Operation is configured to submit an event', { EventTopic: SuccessEvent });
-          
-          const iotData = new IotData({
-            endpoint: IotEndpointAddress
+
+          const iotData = new IoTDataPlaneClient({
+            endpoint: IotEndpointAddress,
           });
 
-          await iotData.publish({
-            topic: join(`${EnvironmentName}/events`, UserId, SuccessEvent),
-            payload: JSON.stringify({
-              Id: updateResult.Id,
-              UserId,
-              EventId: uuid(),
-              EventDate: new Date().toISOString(),
+          await iotData.send(
+            new PublishCommand({
+              topic: join(`${EnvironmentName}/events`, UserId, SuccessEvent),
+              payload: JSON.stringify({
+                Id: updateResult.Id,
+                UserId,
+                EventId: uuid(),
+                EventDate: new Date().toISOString(),
+              }),
             })
-          }).promise();
+          );
         }
         return updateResult;
       case OperationType.DELETE_ITEM:
@@ -157,20 +154,22 @@ export const handler = async (event: any) => { // (event: FunctionEvent<any> as 
         await itemsCrud.deleteItem(Id!);
         if (SuccessEvent) {
           logger.info('Operation is configured to submit an event', { EventTopic: SuccessEvent });
-          
-          const iotData = new IotData({
-            endpoint: IotEndpointAddress
+
+          const iotData = new IoTDataPlaneClient({
+            endpoint: IotEndpointAddress,
           });
 
-          await iotData.publish({
-            topic: join(`${EnvironmentName}/events`, UserId, SuccessEvent),
-            payload: JSON.stringify({
-              Id,
-              UserId,
-              EventId: uuid(),
-              EventDate: new Date().toISOString(),
+          await iotData.send(
+            new PublishCommand({
+              topic: join(`${EnvironmentName}/events`, UserId, SuccessEvent),
+              payload: JSON.stringify({
+                Id,
+                UserId,
+                EventId: uuid(),
+                EventDate: new Date().toISOString(),
+              }),
             })
-          }).promise();
+          );
         }
         return;
       default:
@@ -198,7 +197,6 @@ export const handler = async (event: any) => { // (event: FunctionEvent<any> as 
       default:
         throw new Error('Internal server error');
     }
-
   }
 };
 
@@ -208,5 +206,5 @@ function mapResponse(response: any, fields?: string[]) {
   return Object.keys(response)
     .filter(k => fields.indexOf(k) !== -1)
     .map(k => ({ [k]: response[k] }))
-    .reduce((t: any, i: any) => ({ ...t, ...i }), {})
+    .reduce((t: any, i: any) => ({ ...t, ...i }), {});
 }
