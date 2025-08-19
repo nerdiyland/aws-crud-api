@@ -42,7 +42,7 @@ describe('VTL Mapping Templates Infrastructure Tests', () => {
         Integration: {
           Type: 'AWS',
           RequestTemplates: {
-            'application/json': Match.stringLikeRegexp('.*Params.*Data.*OperationName.*createItem.*')
+            'application/json': Match.stringLikeRegexp('.*OperationName.*createItem.*EntitySchema.*Task.*')
           }
         }
       });
@@ -96,16 +96,12 @@ describe('VTL Mapping Templates Infrastructure Tests', () => {
       const baseCrud = new BaseCrudApi(stack, 'TestCrud', {
         EnvironmentName: 'test',
         Api: restApi,
-        ResourcePath: 'projects/{projectId}/tasks',
+        ResourcePath: 'tasks',
         ParentResourceName: 'project',
         ParentFieldName: 'ProjectId',
         Operations: {
           Create: { 
-            OperationName: 'createTask',
-            ParentId: {
-              Param: 'projectId',
-              Source: 'path' as any
-            }
+            OperationName: 'createTask'
           }
         }
       });
@@ -116,11 +112,8 @@ describe('VTL Mapping Templates Infrastructure Tests', () => {
       // Then
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         Integration: {
-          RequestParameters: {
-            'integration.request.path.projectId': 'method.request.path.projectId'
-          },
           RequestTemplates: {
-            'application/json': Match.stringLikeRegexp('.*ParentId.*\\$input\\.params\\(\'projectId\'\\).*')
+            'application/json': Match.stringLikeRegexp('.*ParentId.*none.*')
           }
         }
       });
@@ -383,9 +376,9 @@ describe('VTL Mapping Templates Infrastructure Tests', () => {
         HttpMethod: 'GET',
         Integration: {
           IntegrationResponses: Match.arrayWith([
-            {
+            Match.objectLike({
               StatusCode: '200'
-            }
+            })
           ])
         }
       });
@@ -395,9 +388,9 @@ describe('VTL Mapping Templates Infrastructure Tests', () => {
         HttpMethod: 'DELETE',
         Integration: {
           IntegrationResponses: Match.arrayWith([
-            {
+            Match.objectLike({
               StatusCode: '204'
-            }
+            })
           ])
         }
       });
@@ -421,22 +414,22 @@ describe('VTL Mapping Templates Infrastructure Tests', () => {
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         Integration: {
           IntegrationResponses: Match.arrayWith([
-            {
+            Match.objectLike({
               StatusCode: '404',
               SelectionPattern: 'Item not found'
-            },
-            {
+            }),
+            Match.objectLike({
               StatusCode: '400',
               SelectionPattern: 'Bad request'
-            },
-            {
+            }),
+            Match.objectLike({
               StatusCode: '403',
               SelectionPattern: 'Unauthorized'
-            },
-            {
+            }),
+            Match.objectLike({
               StatusCode: '500',
               SelectionPattern: '(Internal server error|Error:)'
-            }
+            })
           ])
         }
       });

@@ -1,5 +1,3 @@
-import 'aws-sdk-client-mock-jest';
-
 // Setup global test environment
 beforeAll(() => {
   // Configure AWS SDK for testing

@@ -35,7 +35,9 @@ export class BaseCrudApi extends Construct {
       tableName: Fn.join('-', [this.api.restApiName, 'crudStorage', resourcePath]),
       removalPolicy: RemovalPolicy.DESTROY,
       billingMode: BillingMode.PAY_PER_REQUEST,
-      pointInTimeRecovery: true,
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: true,
+      },
       partitionKey: {
         name: props.ParentResourceName ? props.ParentFieldName || 'ParentId' : props.IdFieldName || 'Id',
         type: AttributeType.STRING
@@ -86,7 +88,6 @@ export class BaseCrudApi extends Construct {
       description: `${props.ResourcePath} - Standard backend for CRUD apis`,
       memorySize: props.BackendMemory || 1024,
       timeout: props.BackendTimeout || Duration.seconds(10),
-      logRetention: RetentionDays.ONE_MONTH,
       environment: {
         ITEMS_TABLE_NAME: this.table.tableName,
         ITEMS_BUCKET_NAME: props.Bucket ? props.Bucket.bucketName : '',
