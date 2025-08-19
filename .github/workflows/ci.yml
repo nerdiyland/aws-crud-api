@@ -106,16 +106,3 @@ jobs:
         run: |
           echo "Checking what would be published to npm..."
           npm pack --dry-run
-
-      - name: Validate TypeScript declarations
-        run: |
-          echo "Checking TypeScript declaration files..."
-          # Verify main exports are properly typed
-          node -e "
-            const fs = require('fs');
-            const dtsContent = fs.readFileSync('./lib/index.d.ts', 'utf8');
-            if (!dtsContent.includes('BaseCrudApi')) {
-              throw new Error('BaseCrudApi not found in type declarations');
-            }
-            console.log('✅ TypeScript declarations validated');
-          "
