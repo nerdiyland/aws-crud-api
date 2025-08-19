@@ -1,4 +1,3 @@
-
 export enum DataClassificationStandard {
   PUBLIC = 'public',
   INTERNAL_ONLY = 'internal',
@@ -19,7 +18,6 @@ export enum DataClassificationRegulation {
  * Defines the data classification policies and standards that customer data must comply with.
  */
 export interface DataClassification {
-
   /**
    * Defines the standard to use to classify data
    * @label Classification Standard

@@ -1,29 +1,26 @@
 import { ItemsCrud } from './items-crud';
 import { expect } from 'chai';
-import { QueryInput } from 'aws-sdk/clients/dynamodb';
+import { QueryInput } from '@aws-sdk/client-dynamodb';
 
 describe('The `listItems` method of the items CRUD service', () => {
-  
   it('must attempt to connect to Dynamo for scanning items', done => {
     const service = new ItemsCrud({
       UserId: '123',
       ItemsTableName: 'dummy',
       AwsRegion: 'dummy',
-      DocumentClient: {
+      DynamoDB: {
         // @ts-ignore
-        scan: (request: any) => ({
-          async promise() {
-            expect(request.TableName).to.equals('dummy');
-            done();
-            
-            return {
-              Items: []
-            }
-          }
-        })
-      }
+        scan: async (request: any) => {
+          expect(request.TableName).to.equals('dummy');
+          done();
+
+          return {
+            Items: [],
+          };
+        },
+      },
     });
-    
+
     service!.listItems();
   });
 
@@ -35,22 +32,22 @@ describe('The `listItems` method of the items CRUD service', () => {
         AwsRegion: 'dummy',
         ParentFieldName: 'MyParentId',
         ParentId: '1234',
-        DocumentClient: {
+        DynamoDB: {
           // @ts-ignore
-          query: (request: QueryInput) => ({
-            async promise() {
-              expect((request.ExpressionAttributeNames as any)['#parentId']).to.be.equals('MyParentId');
-              expect((request.ExpressionAttributeValues as any)[':parentId']).to.be.equals('1234');
-              done();
-              
-              return {
-                Items: []
-              }
-            }
-          })
-        }
+          query: async (request: QueryInput) => {
+            expect((request.ExpressionAttributeNames as any)['#parentId']).to.be.equals(
+              'MyParentId'
+            );
+            expect((request.ExpressionAttributeValues as any)[':parentId']?.S).to.be.equals('1234'); // v3 uses AttributeValue format
+            done();
+
+            return {
+              Items: [],
+            };
+          },
+        },
       });
-      
+
       service!.listItems();
     });
   });

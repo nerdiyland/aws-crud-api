@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "lib/**/*",
+    "packages/**/*.ts",
+    "test/**/*.ts",
+    "examples/**/*.ts",
+    "scripts/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules",
+    "cdk.out",
+    "**/cdk.out",
+    "**/*.d.ts"
+  ]
+}

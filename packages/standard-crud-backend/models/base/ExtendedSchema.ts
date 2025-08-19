@@ -1,4 +1,3 @@
-
 import { DataClassification } from './DataClassification';
 import { JSONSchema } from './Schema';
 
@@ -6,7 +5,6 @@ import { JSONSchema } from './Schema';
  * Available generators that will automatically assign a value to your properties
  */
 export enum PropertyGenerator {
-
   /**
    * Universal Unique Identifier. When this format is set, the Scaffold system will assign a random UUID to the property
    */
@@ -16,7 +14,7 @@ export enum PropertyGenerator {
    * Formatted date with the universal format - i.e. YYYY-MM-DD HH:mm:ss.SSS
    */
   FORMATTED_DATE = '$formattedDate',
-  
+
   TIMESTAMP = '$timestamp',
 
   RANDOM_COLOR = '$randomColor',
@@ -24,11 +22,10 @@ export enum PropertyGenerator {
 
 export enum TextBoolean {
   YES = 'yes',
-  NO = 'no'
+  NO = 'no',
 }
 
 export interface ExtendedJSONSchema extends JSONSchema {
-
   /**
    * Generator used to automatically assign a dynamic value to this field
    * @label entities.ExtendedJSONSchema.properties.generator.label
@@ -49,7 +46,7 @@ export interface ExtendedJSONSchema extends JSONSchema {
    * @fieldType text
    */
   label?: string;
-  
+
   /**
    * Form placeholder
    * @label entities.ExtendedJSONSchema.properties.placeholder.label
@@ -61,7 +58,7 @@ export interface ExtendedJSONSchema extends JSONSchema {
    * @fieldType text
    */
   placeholder?: string;
-  
+
   /**
    * Whether the schema should not be published by the API
    */
@@ -160,7 +157,7 @@ export interface ExtendedJSONSchema extends JSONSchema {
    * @fieldType select
    */
   Variable?: string;
-  
+
   /**
    * In case this field relates with a variable, this field should define which field in the variable to use for labelling elements
    * @label entities.ExtendedJSONSchema.properties.VariableLabelField.label

@@ -1,8 +1,6 @@
-import { StandaloneObject } from "../../../base/StandaloneObject";
+import { StandaloneObject } from '../../../base/StandaloneObject';
 
 /**
  * Base request for object creation
  */
-export interface CreateItemRequest extends StandaloneObject {
-  
-}
+export interface CreateItemRequest extends StandaloneObject {}

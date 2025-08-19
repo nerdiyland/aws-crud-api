@@ -1,9 +1,7 @@
-
 /**
  * Base object for CRUD entities
  */
 export interface StandaloneObject {
-
   /**
    * Unique identifier for the element. It's a read-only UUID generated upon item's registration
    * @label Id

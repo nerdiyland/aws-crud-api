@@ -14,8 +14,14 @@ export class SimpleTasksApiStack extends Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: Cors.ALL_ORIGINS,
         allowMethods: Cors.ALL_METHODS,
-        allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token']
-      }
+        allowHeaders: [
+          'Content-Type',
+          'X-Amz-Date',
+          'Authorization',
+          'X-Api-Key',
+          'X-Amz-Security-Token',
+        ],
+      },
     });
 
     // Create the CRUD API for tasks
@@ -26,33 +32,33 @@ export class SimpleTasksApiStack extends Stack {
       GlobalParent: api.root,
       Operations: {
         Create: {
-          OperationName: 'createTask'
+          OperationName: 'createTask',
         },
         ListOwned: {
           IndexName: 'ByUserId',
-          OperationName: 'listTasks'
+          OperationName: 'listTasks',
         },
         Read: {
-          OperationName: 'getTask'
+          OperationName: 'getTask',
         },
         Update: {
-          OperationName: 'updateTask'
+          OperationName: 'updateTask',
         },
         Delete: {
-          OperationName: 'deleteTask'
-        }
-      }
+          OperationName: 'deleteTask',
+        },
+      },
     });
 
     // Output the API URL for easy access
     new CfnOutput(this, 'ApiUrl', {
       value: api.url,
-      description: 'API Gateway endpoint URL for the Tasks API'
+      description: 'API Gateway endpoint URL for the Tasks API',
     });
 
     new CfnOutput(this, 'TasksEndpoint', {
       value: `${api.url}tasks`,
-      description: 'Full endpoint URL for tasks resource'
+      description: 'Full endpoint URL for tasks resource',
     });
   }
 }

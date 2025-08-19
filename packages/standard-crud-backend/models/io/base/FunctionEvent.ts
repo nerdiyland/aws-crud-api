@@ -1,5 +1,5 @@
-import { CreateItemRequest } from "./contracts/CreateItemRequest"
-import { ListItemsRequest } from "./contracts/ListItemsRequest"
+import { CreateItemRequest } from './contracts/CreateItemRequest';
+import { ListItemsRequest } from './contracts/ListItemsRequest';
 
 export type PossibleRequestInput = CreateItemRequest | ListItemsRequest<any>; // TODO Other possibilities
 
@@ -61,7 +61,6 @@ export interface FunctionEventParams {
 }
 
 export interface FunctionEvent<T extends PossibleRequestInput> {
-
   /**
    * Parameters to configure the function call
    */
