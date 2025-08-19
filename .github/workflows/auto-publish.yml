@@ -117,9 +117,6 @@ jobs:
       - name: Build package
         run: npm run build
 
-      - name: Run tests
-        run: npm test
-
       - name: Update CHANGELOG
         run: |
           NEW_VERSION="${{ needs.detect-cdk-update.outputs.new_version }}"

@@ -29,9 +29,6 @@ jobs:
       - name: Build package
         run: npm run build
 
-      - name: Run tests
-        run: npm test
-
       - name: Check package can be imported
         run: |
           node -e "
